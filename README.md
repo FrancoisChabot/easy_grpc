@@ -45,6 +45,7 @@ private:
   pkg::MyService2::Stub_interface* stub2_;
   pkg::MyService3::Stub_interface* stub3_;
 };
+```
 
 Key points:
 - The handling thread is freed while the child rpcs are in progess
