@@ -1,8 +1,8 @@
 # easy_grpc
 
-A future-based grpc API for C++.
+A future-based gRPC API for C++.
 
-This project is an attempt to create a wrapper around GRPC to make
+This project is an attempt to create a wrapper around gRPC to make
 writing asynchronous servers and clients as straightforward as possible. It may not
 be quite as optimal as a fully-customized server working on raw completion 
 queues, but every effort is being made to get as close as possible while
@@ -52,7 +52,7 @@ int main() {
 
 
   // Wait until the result is done
-  done.wait();
+  done.get();
   
   return 0;
 }
