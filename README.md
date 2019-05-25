@@ -56,11 +56,12 @@ Key points:
 
 ## Current State
 
+- [x] protoc plugin
 - [x] Client Unary-Unary calls
+- [ ] Server Unary-Unary handling
 - [ ] Client Unary-stream calls
 - [ ] Client Stream-Unary calls
 - [ ] Client Stream-Stream calls
-- [ ] Server Unary-Unary handling
 - [ ] Server Unary-stream handling
 - [ ] Server Stream-Unary handling
 - [ ] Server Stream-Stream handling
