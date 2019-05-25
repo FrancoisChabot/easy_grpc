@@ -8,6 +8,51 @@ be quite as optimal as a fully-customized server working on raw completion
 queues, but every effort is being made to get as close as possible while
 maintaining as sane and modern an API as possible.
 
+## The Goal
+
+With easy_grpc, writing asynchronous rpc servers is simple. This is especially true for
+servers that need to send rpcs to other services during the handling of a rpc.
+
+**This doesn't quite work just yet**
+
+```cpp
+class MyService_impl : public pkg::MyService {
+public:
+  MyService_impl(pkg::MyService2::Stub_interface* stub2, 
+                 pkg::MyService2::Stub_interface* stub3,
+                 rpc::Work_queue* worker) 
+      : stub2_(stub2)
+      , stub3_(stub3) {}
+
+  rpc::Future<pkg::Reply> MyMethod(pkg::Request req, rpc::Server_context ctx) {
+    pkg::MyRequest2 stub2_request;
+    pkg::MyRequest3 stub3_request;
+
+    // These requests are sent in parallel.
+    auto rep_2f = stub_2->Method2(stub2_request, ctx);
+    auto rep_3f = stub_3->Method3(stub3_request, ctx);
+
+    // Wait for the completion of both requests:
+    return tie(rep_2f, rep_3f).then(
+      [](auto rep_2, auto rep_3) {
+        pkg::Reply reply;
+        return reply;
+      });
+    )
+  }
+
+private:
+  pkg::MyService2::Stub_interface* stub2_;
+  pkg::MyService3::Stub_interface* stub3_;
+};
+
+Key points:
+- The handling thread is freed while the child rpcs are in progess
+- If either of the child rpcs fail, the failure is propagated to the parent RPC.
+- The lambda will be executed directly in the receiving thread of the last response
+  that comes in (this can be changed easily).
+
+
 ## Current State
 
 - [x] Client Unary-Unary calls
@@ -35,7 +80,7 @@ int main() {
   // Library initialization.
   rpc::Environment grpc_env;
 
-  // Completion queue + handling thread
+  // Completion queue + single handling thread
   rpc::Completion_queue cq;
   
   // Connection to server, with a default completion queue.
@@ -103,6 +148,28 @@ int main() {
 
 
   return 0;
+```
+
+Server sending rpcs during handling:
+
+```cpp
+class MyService_impl : public pkg::MyService {
+public:
+  MyService_impl(pkg::MyService2::Stub_interface* stub) : stub_(stub) {}
+
+  rpc::Future<pkg::Reply> MyMethod(pkg::Request) {
+    pkg::MyRequest2 stub_request;
+
+    return stub_->MyMethod2(stub_request)
+      .then(auto sub_reply) {
+        pkg::Reply result;
+        return result;
+      }
+  }
+
+private:
+  pkg::MyService2::Stub_interface* stub_;
+};
 ```
 ## Futures
 
