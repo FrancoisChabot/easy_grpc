@@ -2,6 +2,8 @@ protobuf_generate_cpp(PROTO_SRCS PROTO_HDRS data.proto)
 
 set(GENERATED_PROTOBUF_PATH ${CMAKE_CURRENT_SOURCE_DIR}/generated)
 
+file(MAKE_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/generated)
+
 add_custom_command(
                 OUTPUT  "${CMAKE_CURRENT_SOURCE_DIR}/generated/data.egrpc.pb.h"
                         "${CMAKE_CURRENT_SOURCE_DIR}/generated/data.egrpc.pb.cc"
