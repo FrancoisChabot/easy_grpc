@@ -13,7 +13,7 @@ maintaining as sane and modern an API as possible.
 With easy_grpc, writing asynchronous rpc servers is simple. This is especially true for
 servers that need to send rpcs to other services during the handling of a rpc.
 
-** Disclaimer: This is idealized code, the actual implementation is not quite there yet (though it's getting close).**
+**Disclaimer:** This is idealized code, the actual implementation is not quite there yet (though it's getting close).
 
 ```cpp
 class MyService_impl : public pkg::MyService {
@@ -54,7 +54,7 @@ Key points:
 
 ## Requirements
 
-All you need is a compliant C++17 compiler, and grpc itself.
+All you need is a compliant C++17 compiler, and grpc itself. It should be possible to back-port this library to C++14 if there is enough demand for it.
 
 The Dockerfile contained in this project contains an image that should have everything you need.
 
