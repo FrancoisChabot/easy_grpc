@@ -13,8 +13,6 @@ maintaining as sane and modern an API as possible.
 With easy_grpc, writing asynchronous rpc servers is simple. This is especially true for
 servers that need to send rpcs to other services during the handling of a rpc.
 
-**This doesn't quite work just yet**
-
 ```cpp
 class MyService_impl : public pkg::MyService {
 public:
@@ -58,7 +56,7 @@ Key points:
 
 - [x] protoc plugin
 - [x] Client Unary-Unary calls
-- [ ] Server Unary-Unary handling
+- [x] Server Unary-Unary handling
 - [ ] Client Unary-stream calls
 - [ ] Client Stream-Unary calls
 - [ ] Client Stream-Stream calls
@@ -66,6 +64,9 @@ Key points:
 - [ ] Server Stream-Unary handling
 - [ ] Server Stream-Stream handling
 
+Next steps:
+- Big cleanup and documentation pass.
+- Tests, lots of tests.
 
 ## Examples:
 
