@@ -171,10 +171,10 @@ public:
     pkg::MyRequest2 stub_request;
 
     return stub_->MyMethod2(stub_request)
-      .then(auto sub_reply) {
+      .then([](auto sub_reply) {
         pkg::Reply result;
         return result;
-      }
+      });
   }
 
 private:
