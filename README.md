@@ -71,6 +71,7 @@ The Dockerfile contained in this project contains an image that should have ever
 - [ ] Server Stream-Stream handling
 
 Next steps:
+- Get second and third opinions on the API before proceeding.
 - Big cleanup and documentation pass.
 - Tests, lots of tests.
 
