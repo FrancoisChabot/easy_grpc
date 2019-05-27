@@ -51,6 +51,9 @@ Key points:
 - The lambda will be executed directly in the receiving thread of the last response
   that comes in (this can be changed easily).
 
+## How to use
+
+Since things are fluctuating pretty quickly, the current authoritative api is the 00_hello_rpc example.
 
 ## Current State
 
