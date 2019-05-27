@@ -722,13 +722,7 @@ void bind_landing(const std::shared_ptr<LandingT>& l, Future<Front> front,
   });
   bind_landing<id + 1>(l, std::move(futs)...);
 }
-
-template <typename... Ts>
-struct Fut_concat {
-  using fut_type = Future<Ts...>;
-  using landing_type = Landing<Ts...>;
-};
-
+ 
 }  // namespace detail
 template <typename... Ts>
 Future<Ts...> tie(Future<Ts>... futs) {
