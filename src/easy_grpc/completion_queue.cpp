@@ -37,8 +37,10 @@ void Completion_queue::worker_main() {
       std::cerr << "Consuming from queue...\n";
       Completion* completion = reinterpret_cast<Completion*>(event.tag);
       try {
-        completion->exec(event.success);
-        delete completion;
+        bool kill = completion->exec(event.success);
+        if(kill) {
+          delete completion;
+        }
       } catch (...) {
         // TODO: This should get reported somehow...
       }

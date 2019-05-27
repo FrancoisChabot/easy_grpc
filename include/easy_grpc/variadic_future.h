@@ -495,6 +495,10 @@ class Future {
     storage_->fullfill(std::move(values));
   }
 
+  Future(std::exception_ptr exception) : storage_(std::make_shared<storage_type>()) {
+    storage_->fail(exception);
+  }
+
   Future(std::shared_ptr<storage_type> s) : storage_(std::move(s)) {}
   Future(Future&&) = default;
   Future(const Future&) = delete;

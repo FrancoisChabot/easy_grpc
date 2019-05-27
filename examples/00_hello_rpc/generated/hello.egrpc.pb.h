@@ -43,14 +43,14 @@ public:
 
   void visit_methods(::easy_grpc::server::detail::Method_visitor&) override;
 
-  ::easy_grpc::server::detail::Unary_method SayHello_method;
-  ::easy_grpc::server::detail::Unary_method SayBye_method;
+  std::unique_ptr<::easy_grpc::server::detail::Method> SayHello_method;
+  std::unique_ptr<::easy_grpc::server::detail::Method> SayBye_method;
 
 private:
   void start_listening_(const char* method_name, ::easy_grpc::Completion_queue* queue) override;
 
-  ::easy_grpc::Future<::pkg::HelloReply> handle_SayHello();
-  ::easy_grpc::Future<::pkg::HelloReply> handle_SayBye();
+  ::easy_grpc::Future<::pkg::HelloReply> handle_SayHello(::pkg::HelloRequest);
+  ::easy_grpc::Future<::pkg::HelloReply> handle_SayBye(::pkg::HelloRequest);
 
 };
 

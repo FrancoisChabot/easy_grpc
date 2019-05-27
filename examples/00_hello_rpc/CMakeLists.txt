@@ -18,6 +18,19 @@ add_custom_command(
           )
 
 add_custom_command(
+                OUTPUT  "${GENERATED_PROTOBUF_PATH}/hello.grpc.pb.h"
+                        "${GENERATED_PROTOBUF_PATH}/hello.grpc.pb.cc"
+                COMMAND ${Protobuf_PROTOC_EXECUTABLE}
+                ARGS 
+                "--proto_path=${CMAKE_CURRENT_SOURCE_DIR}"
+                "--grpc_out=${GENERATED_PROTOBUF_PATH}"
+                "--plugin=protoc-gen-grpc=/usr/local/bin/grpc_cpp_plugin"
+                "${CMAKE_CURRENT_SOURCE_DIR}/hello.proto"
+                MAIN_DEPENDENCY ${CMAKE_CURRENT_SOURCE_DIR}/hello.proto
+                DEPENDS easy_grpc_protoc_plugin
+          )
+
+add_custom_command(
                 OUTPUT  "${CMAKE_CURRENT_SOURCE_DIR}/generated/hello.pb.h"
                         "${CMAKE_CURRENT_SOURCE_DIR}/generated/hello.pb.cc"
                 COMMAND ${Protobuf_PROTOC_EXECUTABLE}
@@ -39,6 +52,15 @@ target_link_libraries(hello_proto easy_grpc)
 add_executable(hello_server 
   server_main.cpp
 )
+
+add_executable(hello_server_ref
+  generated/hello.grpc.pb.cc
+  generated/hello.pb.cc
+  server_ref_main.cpp
+)
+
+target_include_directories(hello_server_ref PUBLIC .)
+target_link_libraries(hello_server_ref easy_grpc)
 
 add_executable(hello_client 
   client_main.cpp

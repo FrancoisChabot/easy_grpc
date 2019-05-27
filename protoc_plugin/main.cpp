@@ -155,7 +155,10 @@ void generate_service_header(const ServiceDescriptor* service,
 
   for (int i = 0; i < service->method_count(); ++i) {
     auto method = service->method(i);
-    dst << "  ::easy_grpc::server::detail::Unary_method " << method->name() << "_method;\n";
+    auto input = method->input_type();
+    auto output = method->output_type();
+    dst << "  std::unique_ptr<::easy_grpc::server::detail::Method> " << method->name() << "_method;\n";
+    //dst << "  ::easy_grpc::server::detail::Unary_method<" << class_name(input) << ", " << class_name(output) <<  "> " << method->name() << "_method;\n";
   }
 
   dst << "\n";
@@ -169,7 +172,7 @@ void generate_service_header(const ServiceDescriptor* service,
     auto output = method->output_type();
 
     dst << "  ::easy_grpc::Future<" << class_name(output) << "> handle_"
-        << method->name() << "();\n";
+        << method->name() << "("<<class_name(input)<<");\n";
   }
 
   dst << "\n";
@@ -196,23 +199,18 @@ void generate_service_source(const ServiceDescriptor* service,
   }
   dst << "}\n\n";
 
-  dst << name << "::" << name << "() ";
-  if(service->method_count() > 0) {
-    bool first = true;
-     for (int i = 0; i < service->method_count(); ++i) {
-      auto method = service->method(i);
-      if(first) {
-        dst << "\n  : ";
-        first = false;
-      }
-      else {
-        dst << "\n  , ";
-      }
+  dst << name << "::" << name << "() {\n";
+  for (int i = 0; i < service->method_count(); ++i) {
+    auto method = service->method(i);
+    
+    auto input = method->input_type();
+    auto output = method->output_type();
 
-      dst << method->name() << "_method(" << method_name_cste(method) << ")";
-    }
+    dst << "  " << method->name() << "_method = ::easy_grpc::server::detail::make_unary_method<" << class_name(input)<<", "<<class_name(output) << ">(" 
+        << method_name_cste(method) << ", [this](" << class_name(input) << " req) {\n    return handle_" << method->name() << "(std::move(req));\n  });\n";
   }
-  dst << " {}\n\n";
+
+  dst << "}\n\n";
 
   dst << name
       << "::Stub::Stub(::easy_grpc::client::Channel* c, "
@@ -244,13 +242,19 @@ void generate_service_source(const ServiceDescriptor* service,
         << "};\n\n";
     
     dst << "::easy_grpc::Future<" << class_name(output) << "> " << name 
-        << "::handle_" << method->name() << "() {return {};}\n\n";
+        << "::handle_" << method->name() << "("<<class_name(input)<<" input) {\n"
+        << "  try {\n"
+        << "    return "<<method->name()<<"(std::move(input));\n"
+        << "  } catch(...) {\n"
+        << "    return std::current_exception();\n"
+        << "  }\n" 
+        << "}\n\n";
   }
 
   dst << "void " << name << "::visit_methods(::easy_grpc::server::detail::Method_visitor& visitor) {\n";
     for (int i = 0; i < service->method_count(); ++i) {
     auto method = service->method(i);
-    dst << "  visitor.visit(" << method->name() << "_method);\n";
+    dst << "  visitor.visit(*" << method->name() << "_method);\n";
   }
   dst << "}\n";
   dst << "void " << name << "::start_listening_(const char* method_name, ::easy_grpc::Completion_queue* queue) {}\n";

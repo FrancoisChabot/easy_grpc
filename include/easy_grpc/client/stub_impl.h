@@ -16,9 +16,11 @@
 #define EASY_GRPC_CLIENT_STUB_IMPL_INCLUDED_H
 
 #include "easy_grpc/completion_queue.h"
+#include "easy_grpc/error.h"
 #include "easy_grpc/variadic_future.h"
 #include "easy_grpc/serialize.h"
 #include "grpc/grpc.h"
+#include "grpc/support/alloc.h"
 
 #include <cstring>
 
@@ -50,12 +52,22 @@ class Call_completion final : public Completion_queue::Completion {
     grpc_call_unref(call_);
   }
 
-  void exec(bool success) override {
-    if (error_string_) {
-      std::cerr << error_string_ << "\n";
+  bool exec(bool success) override {
+    if (status_ == GRPC_STATUS_OK) {
+      rep_.set_value(deserialize<RepT>(recv_buffer_));
     }
-
-    rep_.set_value(deserialize<RepT>(recv_buffer_));
+    else {
+      try {
+        auto str = grpc_slice_to_c_string(status_details_);
+        auto err = Rpc_error(status_, str);
+        gpr_free(str);
+        throw err;
+      }
+      catch(...) {
+        rep_.set_exception(std::current_exception());
+      }
+    }
+    return true;
   }
 
   grpc_call* call_;

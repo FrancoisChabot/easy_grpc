@@ -19,9 +19,13 @@ int main() {
   // Call method
   HelloRequest req;
   req.set_name("Frank");
-  auto rep = stub.SayHello({});
+  auto rep = stub.SayHello(req);
 
-  std::cout << rep.get().greeting() << "\n";
-  
-   return 0;
+  try {
+    std::cout << rep.get().greeting() << "\n";
+  }
+  catch(std::exception& e) {
+    std::cerr << "Something went wrong: " << e.what() << "\n";
+  }
+  return 0;
 }

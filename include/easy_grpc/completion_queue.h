@@ -27,7 +27,9 @@ class Completion_queue {
   class Completion {
    public:
     virtual ~Completion() {}
-    virtual void exec(bool success) = 0;
+
+    // TODO: replace bool with an enum
+    virtual bool exec(bool success) = 0;
   };
 
   Completion_queue();
@@ -67,7 +69,7 @@ public:
   }
 
   bool empty() const {return queues_.empty();}
-  
+
 private:
   std::vector<std::reference_wrapper<Completion_queue>> queues_;
 };

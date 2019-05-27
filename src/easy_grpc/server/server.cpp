@@ -30,7 +30,7 @@ namespace server {
         : default_queues_(default_queues)
         , tgt_(tgt) {}
 
-      void visit(detail::Unary_method& info) override {
+      void visit(detail::Method& info) override {
         auto handle = grpc_server_register_method(
           tgt_->handle(), info.name(), nullptr,
           GRPC_SRM_PAYLOAD_READ_INITIAL_BYTE_BUFFER,

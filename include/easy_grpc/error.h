@@ -26,13 +26,14 @@ namespace easy_grpc {
     Rpc_error(grpc_status_code code, const char* what) 
       : std::runtime_error(what)
       , code_(code) {}
-      
+
+  grpc_status_code code() const { return code_; }
   private:
     grpc_status_code code_;
   };
 
   namespace error {
-    Rpc_error invalid_argument(const char* what) {
+    inline Rpc_error invalid_argument(const char* what) {
       return Rpc_error(GRPC_STATUS_INVALID_ARGUMENT, what);
     }
   }

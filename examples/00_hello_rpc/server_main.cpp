@@ -15,6 +15,7 @@ class Hello_impl : public HelloService {
 public:
   // Says hello
   Future<HelloReply> SayHello(const HelloRequest& req) {
+    std::cerr << "saying hello\n";
     if(req.name() == "") {
       throw rpc::error::invalid_argument("must provide name");
     }
