@@ -15,14 +15,28 @@
 #ifndef EASY_GRPC_SERVER_SERVICE_H_INCLUDED
 #define EASY_GRPC_SERVER_SERVICE_H_INCLUDED
 
+#include "easy_grpc/server/service_impl.h"
+#include "easy_grpc/completion_queue.h"
+
 #include <string>
 
 namespace easy_grpc {
 
 namespace server {
+
 class Service {
  public:
   virtual ~Service() {}
+
+  void set_default_queues(Completion_queue_set queues);
+  const Completion_queue_set& default_queues();
+  
+  virtual void visit_methods(::easy_grpc::server::detail::Method_visitor&) = 0;
+private:
+  virtual void start_listening_(const char* method_name, Completion_queue* queue) = 0; 
+  
+  Completion_queue_set default_queues_;
+  friend class Server;
 };
 }  // namespace server
 

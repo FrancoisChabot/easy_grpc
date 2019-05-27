@@ -12,17 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef EASY_GRPC_LIB_H_INCLUDED
-#define EASY_GRPC_LIB_H_INCLUDED
-
-#include "easy_grpc/completion_queue.h"
-#include "easy_grpc/environment.h"
-#include "easy_grpc/error.h"
-#include "easy_grpc/variadic_future.h"
-
-#include "easy_grpc/client/unsecure_channel.h"
-
-#include "easy_grpc/server/server.h"
 #include "easy_grpc/server/service.h"
 
-#endif
+namespace easy_grpc {
+  namespace server {
+    void Service::set_default_queues(Completion_queue_set queues) {
+      default_queues_ = std::move(queues);
+    }
+
+    const Completion_queue_set& Service::default_queues() {
+      return default_queues_;
+    }
+  }
+}

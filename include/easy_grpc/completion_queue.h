@@ -15,8 +15,10 @@
 #ifndef EASY_GRPC_COMPLETION_QUEUE_INCLUDED_H
 #define EASY_GRPC_COMPLETION_QUEUE_INCLUDED_H
 
-#include <thread>
 #include "grpc/grpc.h"
+
+#include <thread>
+#include <vector>
 
 namespace easy_grpc {
 // A completion queue, with a matching thread that consumes from it.
@@ -37,6 +39,37 @@ class Completion_queue {
   void worker_main();
   std::thread thread_;
   grpc_completion_queue* handle_;
+};
+
+// Each server-side method is bound to a set of completion queues.
+class Completion_queue_set {
+public:
+  Completion_queue_set() = default;
+  Completion_queue_set(Completion_queue_set&&) = default;
+  Completion_queue_set(const Completion_queue_set&) = default;
+  Completion_queue_set& operator=(Completion_queue_set&&) = default;
+  Completion_queue_set& operator=(const Completion_queue_set&) = default;
+
+  template<typename IteT>
+  Completion_queue_set(IteT begin, IteT end) {
+    queues_.reserve(std::distance(begin, end));
+    for(; begin != end; ++begin) {
+      queues_.push_back(std::ref(*begin));
+    }
+  }
+
+  auto begin() const {
+    return queues_.begin();
+  }
+
+  auto end() const {
+    return queues_.end();
+  }
+
+  bool empty() const {return queues_.empty();}
+  
+private:
+  std::vector<std::reference_wrapper<Completion_queue>> queues_;
 };
 }  // namespace easy_grpc
 #endif

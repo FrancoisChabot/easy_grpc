@@ -491,6 +491,10 @@ class Future {
   using storage_type = detail::Future_storage<Ts...>;
 
   Future() = default;
+  Future(std::tuple<Ts...> values) : storage_(std::make_shared<storage_type>()) {
+    storage_->fullfill(std::move(values));
+  }
+
   Future(std::shared_ptr<storage_type> s) : storage_(std::move(s)) {}
   Future(Future&&) = default;
   Future(const Future&) = delete;

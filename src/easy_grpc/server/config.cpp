@@ -13,12 +13,23 @@
 // limitations under the License.
 
 #include "easy_grpc/server/server.h"
+#include "easy_grpc/server/service.h"
+#include "easy_grpc/server/service_impl.h"
+
+#include <set>
+#include <cassert>
 
 namespace easy_grpc {
 
 namespace server {
+
+Config& Config::with_default_listening_queues(Completion_queue_set queues) {
+  default_queues_ = std::move(queues);
+  return *this;
+}
+
 Config& Config::with_service(Service* service) {
-  services_.push_back(service);
+  services_.push_back({service});
   return *this;
 }
 
@@ -28,25 +39,6 @@ Config& Config::with_listening_port(std::string addr,
   return *this;
 }
 
-Server::Server(Config cfg) { impl_ = grpc_server_create(nullptr, nullptr); }
-
-Server::~Server() { cleanup_(); }
-
-Server::Server(Server&& rhs) : impl_(rhs.impl_) { rhs.impl_ = nullptr; }
-
-Server& Server::operator=(Server&& rhs) {
-  cleanup_();
-  impl_ = rhs.impl_;
-  rhs.impl_ = nullptr;
-
-  return *this;
-}
-
-void Server::cleanup_() {
-  if (impl_) {
-    grpc_server_destroy(impl_);
-  }
-}
 }  // namespace server
 
 }  // namespace easy_grpc

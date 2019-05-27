@@ -18,8 +18,12 @@ add_subdirectory(protoc_plugin)
 add_library(easy_grpc
   src/easy_grpc/client/channel.cpp
   src/easy_grpc/client/unsecure_channel.cpp
+  
+  src/easy_grpc/server/config.cpp
+  src/easy_grpc/server/server.cpp
+  src/easy_grpc/server/service.cpp
+  
   src/easy_grpc/environment.cpp
-  src/easy_grpc/server.cpp
   src/easy_grpc/completion_queue.cpp
 )
 
@@ -38,6 +42,6 @@ target_link_libraries(easy_grpc
 )
 
 
-add_subdirectory(examples/simple_async_client)
+add_subdirectory(examples/00_hello_rpc)
 enable_testing()
 add_subdirectory(tests)

@@ -31,6 +31,14 @@ TEST(Future, fill_from_promise_st) {
 }
 
 
+// This cannot be a constructor because Future<> would have a default constructor that fills it...
+TEST(Future, pre_filled_future) {
+  rpc::Future<int> x(12);
+   
+  EXPECT_EQ(x.get(), 12);
+}
+
+
 TEST(Future, fill_from_promise_mt) {
   rpc::Promise<int> prom;
   auto fut = prom.get_future();
@@ -361,6 +369,8 @@ TEST(Multi_Future, simple_tie) {
 
   EXPECT_EQ(result_fut.get(), 6);
 }
+
+
 /*
 rpc::Future<int> foo(int x) {
   rpc::Promise<int> prom;

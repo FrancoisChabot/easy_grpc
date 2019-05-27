@@ -19,8 +19,11 @@
 
 #include "easy_grpc/client/channel.h"
 #include "easy_grpc/client/stub_impl.h"
+
+#include "easy_grpc/server/service.h"
+#include "easy_grpc/server/service_impl.h"
+
 #include "easy_grpc/completion_queue.h"
 #include "easy_grpc/variadic_future.h"
-#include "easy_grpc/server/service.h"
 
 #endif

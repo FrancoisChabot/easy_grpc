@@ -12,17 +12,31 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef EASY_GRPC_LIB_H_INCLUDED
-#define EASY_GRPC_LIB_H_INCLUDED
+#ifndef EASY_GRPC_ERROR_H_INCLUDED
+#define EASY_GRPC_ERROR_H_INCLUDED
 
-#include "easy_grpc/completion_queue.h"
-#include "easy_grpc/environment.h"
-#include "easy_grpc/error.h"
-#include "easy_grpc/variadic_future.h"
+#include "grpc/grpc.h"
 
-#include "easy_grpc/client/unsecure_channel.h"
+#include <stdexcept>
 
-#include "easy_grpc/server/server.h"
-#include "easy_grpc/server/service.h"
+namespace easy_grpc {
+
+  class Rpc_error : public std::runtime_error {
+  public:
+    Rpc_error(grpc_status_code code, const char* what) 
+      : std::runtime_error(what)
+      , code_(code) {}
+      
+  private:
+    grpc_status_code code_;
+  };
+
+  namespace error {
+    Rpc_error invalid_argument(const char* what) {
+      return Rpc_error(GRPC_STATUS_INVALID_ARGUMENT, what);
+    }
+  }
+
+}
 
 #endif
