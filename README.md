@@ -13,7 +13,6 @@ maintaining as sane and modern an API as possible.
 With easy_grpc, writing asynchronous rpc servers is simple. This is especially true for
 servers that need to send rpcs to other services during the handling of a rpc.
 
-**Disclaimer:** This is idealized code, the actual implementation is not quite there yet (though it's getting close).
 
 ```cpp
 class MyService_impl : public pkg::MyService {
@@ -23,13 +22,13 @@ public:
       : stub2_(stub2)
       , stub3_(stub3) {}
 
-  rpc::Future<pkg::Reply> MyMethod(pkg::Request req, rpc::Server_context ctx) {
+  rpc::Future<pkg::Reply> MyMethod(pkg::Request req) {
     pkg::MyRequest2 stub2_request;
     pkg::MyRequest3 stub3_request;
 
     // These requests are sent in parallel.
-    auto rep_2f = stub_2->Method2(stub2_request, ctx);
-    auto rep_3f = stub_3->Method3(stub3_request, ctx);
+    auto rep_2f = stub_2->Method2(stub2_request);
+    auto rep_3f = stub_3->Method3(stub3_request);
 
     // Wait for the completion of both requests:
     return tie(rep_2f, rep_3f).then(
