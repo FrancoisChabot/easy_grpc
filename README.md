@@ -50,9 +50,11 @@ Key points:
 - The lambda will be executed directly in the receiving thread of the last response
   that comes in (this can be changed easily).
 
-## How to use
+## Requirements
 
-Since things are fluctuating pretty quickly, the current authoritative api is the 00_hello_rpc example.
+All you need is a compliant C++17 compiler, and grpc itself.
+
+The Dockerfile contained in this project contains an image that should have everything you need.
 
 ## Current State
 
