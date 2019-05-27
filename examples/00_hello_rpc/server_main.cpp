@@ -20,6 +20,9 @@ public:
       throw rpc::error::invalid_argument("must provide name");
     }
 
+    // This is actually a synchronous handler.
+    // But all you need to do to make this asynchronous is to return a future
+    // that is fullfilled at a later time.
     HelloReply rep;
     rep.set_greeting(std::string("Hello " + req.name()));
 
