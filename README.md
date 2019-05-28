@@ -23,7 +23,7 @@ servers that need to send rpcs to other services during the handling of a rpc.
 class MyService_impl : public pkg::MyService {
 public:
   MyService_impl(pkg::MyService2::Stub_interface* stub2, 
-                 pkg::MyService2::Stub_interface* stub3) 
+                 pkg::MyService3::Stub_interface* stub3) 
       : stub2_(stub2)
       , stub3_(stub3) {}
 
