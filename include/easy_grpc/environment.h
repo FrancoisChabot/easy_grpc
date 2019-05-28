@@ -41,8 +41,6 @@ class [[nodiscard]] Environment {
   }
 
   static bool is_valid();
-
- private:
 };
 }
 

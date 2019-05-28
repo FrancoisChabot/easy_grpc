@@ -27,7 +27,7 @@ namespace easy_grpc {
       : std::runtime_error(what)
       , code_(code) {}
 
-  grpc_status_code code() const { return code_; }
+    grpc_status_code code() const { return code_; }
   private:
     grpc_status_code code_;
   };

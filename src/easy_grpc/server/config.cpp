@@ -34,8 +34,9 @@ Config& Config::with_service(Service* service) {
 }
 
 Config& Config::with_listening_port(std::string addr,
-                                    std::shared_ptr<Credentials> creds) {
-  ports_.push_back({std::move(addr), creds});
+                                    std::shared_ptr<Credentials> creds,
+                                    int* bound_port) {
+  ports_.push_back({std::move(addr), creds, bound_port});
   return *this;
 }
 

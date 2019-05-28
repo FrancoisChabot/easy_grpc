@@ -111,11 +111,14 @@ Server::Server(const Config& cfg)
 void Server::add_listening_ports_(const Config& cfg) {
   for(const auto& port: cfg.ports_) {
     if(!port.creds) {
-      auto success = grpc_server_add_insecure_http2_port(impl_, port.addr.c_str());
+      auto bound_port = grpc_server_add_insecure_http2_port(impl_, port.addr.c_str());
 
-      if(!success) {
+      if(!bound_port) {
         cleanup_();
         throw std::runtime_error("grpc_server_add_insecure_http2_port failed");
+      }
+      if(port.bound_report) {
+        *port.bound_report = bound_port;
       }
     }
     else {

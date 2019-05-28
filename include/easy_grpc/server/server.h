@@ -38,7 +38,8 @@ class Config {
   Config& with_service(Service*);
 
   Config& with_listening_port(std::string addr,
-                              std::shared_ptr<Credentials> creds = {});
+                              std::shared_ptr<Credentials> creds = {},
+                              int* bound_port = nullptr);
 
  private:
   struct Bound_service {
@@ -48,6 +49,7 @@ class Config {
   struct Port {
     std::string addr;
     std::shared_ptr<Credentials> creds;
+    int* bound_report;
   };
 
   Completion_queue_set default_queues_;

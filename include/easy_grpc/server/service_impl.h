@@ -153,12 +153,15 @@ namespace server {
 
       bool exec(bool success) override {
 
-        pending_call_->perform(handler_);
-
-        // Listen for a new call.
-        inject();
-        return false; // This object is recycled.
-      }
+        if(success) {
+          pending_call_->perform(handler_);
+        
+          // Listen for a new call.
+          inject();
+          return false; // This object is recycled.
+        }
+        return true;
+       }
 
       void inject() {
         pending_call_ = new Unary_call_handler<ReqT, RepT>;

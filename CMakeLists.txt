@@ -6,10 +6,6 @@ set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
 find_package(Protobuf REQUIRED)
 
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_EXTENSIONS OFF)
-
 add_subdirectory(protoc_plugin)
 
 add_library(easy_grpc
@@ -23,6 +19,8 @@ add_library(easy_grpc
   src/easy_grpc/environment.cpp
   src/easy_grpc/completion_queue.cpp
 )
+
+target_compile_features(easy_grpc PUBLIC cxx_std_17)
 
 target_include_directories(easy_grpc
   PUBLIC include
