@@ -57,6 +57,5 @@ void HelloService::visit_methods(::easy_grpc::server::detail::Method_visitor& vi
   visitor.visit(*SayHello_method);
   visitor.visit(*SayBye_method);
 }
-void HelloService::start_listening_(const char* method_name, ::easy_grpc::Completion_queue* queue) {}
 } // namespacepkg
 

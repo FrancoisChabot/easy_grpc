@@ -42,8 +42,6 @@ public:
   std::unique_ptr<::easy_grpc::server::detail::Method> TestMethod_method;
 
 private:
-  void start_listening_(const char* method_name, ::easy_grpc::Completion_queue* queue) override;
-
   ::easy_grpc::Future<::tests::TestReply> handle_TestMethod(::tests::TestRequest);
 
 };

@@ -164,7 +164,6 @@ void generate_service_header(const ServiceDescriptor* service,
   dst << "\n";
   dst << "private:\n";
 
-  dst << "  void start_listening_(const char* method_name, ::easy_grpc::Completion_queue* queue) override;\n\n";
   for (int i = 0; i < service->method_count(); ++i) {
     auto method = service->method(i);
 
@@ -257,7 +256,6 @@ void generate_service_source(const ServiceDescriptor* service,
     dst << "  visitor.visit(*" << method->name() << "_method);\n";
   }
   dst << "}\n";
-  dst << "void " << name << "::start_listening_(const char* method_name, ::easy_grpc::Completion_queue* queue) {}\n";
 }
 
 std::string generate_header(const FileDescriptor* file) {

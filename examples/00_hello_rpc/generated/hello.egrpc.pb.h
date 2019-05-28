@@ -47,8 +47,6 @@ public:
   std::unique_ptr<::easy_grpc::server::detail::Method> SayBye_method;
 
 private:
-  void start_listening_(const char* method_name, ::easy_grpc::Completion_queue* queue) override;
-
   ::easy_grpc::Future<::pkg::HelloReply> handle_SayHello(::pkg::HelloRequest);
   ::easy_grpc::Future<::pkg::HelloReply> handle_SayBye(::pkg::HelloRequest);
 

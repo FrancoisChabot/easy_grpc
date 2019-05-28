@@ -37,6 +37,5 @@ TestService::Stub::Stub(::easy_grpc::client::Channel* c, ::easy_grpc::Completion
 void TestService::visit_methods(::easy_grpc::server::detail::Method_visitor& visitor) {
   visitor.visit(*TestMethod_method);
 }
-void TestService::start_listening_(const char* method_name, ::easy_grpc::Completion_queue* queue) {}
 } // namespacetests
 

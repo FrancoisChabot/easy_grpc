@@ -33,7 +33,6 @@ class Service {
   
   virtual void visit_methods(::easy_grpc::server::detail::Method_visitor&) = 0;
 private:
-  virtual void start_listening_(const char* method_name, Completion_queue* queue) = 0; 
   
   Completion_queue_set default_queues_;
   friend class Server;

@@ -107,7 +107,6 @@ public:
     v.visit(*DoWork_method);
   }
 
-  void start_listening_(const char* method_name, ::easy_grpc::Completion_queue* queue) override {}
 };
 
 
