@@ -66,8 +66,16 @@ namespace server {
 Server::Server(const Config& cfg) 
   : default_queues_(cfg.default_queues_) { 
 
-  shutdown_queue_ = grpc_completion_queue_create_for_next(nullptr);
-  std::cerr << std::hex << (intptr_t)shutdown_queue_ << "\n";
+  // We need to pre-allocate the shutdown queue. Because it must be registered in the server prior to starting it.
+  grpc_completion_queue_attributes sd_queue_attribs;
+  sd_queue_attribs.version = GRPC_CQ_CURRENT_VERSION;
+  sd_queue_attribs.cq_completion_type = GRPC_CQ_NEXT;
+  sd_queue_attribs.cq_polling_type = GRPC_CQ_NON_POLLING;
+  sd_queue_attribs.cq_shutdown_cb = nullptr;
+
+  shutdown_queue_ = grpc_completion_queue_create(grpc_completion_queue_factory_lookup(&sd_queue_attribs), &sd_queue_attribs, nullptr);
+
+
   impl_ = grpc_server_create(nullptr, nullptr); 
 
   add_listening_ports_(cfg);
@@ -98,7 +106,7 @@ Server::Server(const Config& cfg)
     grpc_server_register_completion_queue(impl_, cq, nullptr);
   }
 
-  // This is supposed to be necessary, but adding this breaks handling for some reason...
+
   grpc_server_register_completion_queue(impl_, shutdown_queue_, nullptr);
   
 
@@ -152,7 +160,6 @@ void Server::cleanup_() {
   if (impl_) {
     // Perform a synchronous server shutdown.
     grpc_server_shutdown_and_notify(impl_, shutdown_queue_, nullptr);
-    grpc_server_cancel_all_calls(impl_);
     auto evt = grpc_completion_queue_next(shutdown_queue_, gpr_inf_future(GPR_CLOCK_REALTIME), nullptr);
     assert(evt.type == GRPC_OP_COMPLETE);
     grpc_completion_queue_shutdown(shutdown_queue_);

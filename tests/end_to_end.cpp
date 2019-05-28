@@ -39,20 +39,19 @@ TEST(test_easy_grpc, simple_rpc) {
     ::tests::TestRequest req;
     req.set_name("dude");
     EXPECT_EQ(stub.TestMethod(req).get().name(), "dude_replied");
-    std::cerr<< "ping\nping\nping\nping\nping\n";
-    std::this_thread::sleep_for(std::chrono::seconds(2));
   }
-  std::cerr<< "ping\nping\nping\nping\nping\n";
-  
-
 }
 
 
 TEST(test_easy_grpc, big_volume) {
   rpc::Environment grpc_env;
 
-  std::array<rpc::Completion_queue, 4> server_queues;
-  std::array<rpc::Completion_queue, 4> client_queues;
+  constexpr int receiving_threads = 4;
+  constexpr int sending_threads = 4;
+  constexpr int rpcs_to_send = 10000;
+  
+  std::array<rpc::Completion_queue, receiving_threads> server_queues;
+  std::array<rpc::Completion_queue, sending_threads> client_queues;
 
   Test_sync_impl sync_srv;
 
@@ -70,10 +69,16 @@ TEST(test_easy_grpc, big_volume) {
   ::tests::TestRequest req;
   req.set_name("dude");
 
-  for(int i = 0 ; i < 10000; ++i) {
+  std::vector<rpc::Future<::tests::TestReply>> results;
+  results.reserve (rpcs_to_send);
+
+  for(int i = 0 ; i < rpcs_to_send; ++i) {
     rpc::client::Call_options options;
-    options.completion_queue = &client_queues[i%4];
-    
-    EXPECT_EQ(stub.TestMethod(req, options).get().name(), "dude_replied");
+    options.completion_queue = &client_queues[i%sending_threads];
+    results.emplace_back(stub.TestMethod(req, options));
+  }
+
+  for(auto& f : results) {
+    EXPECT_EQ(f.get().name(), "dude_replied");
   }
 }
