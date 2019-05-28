@@ -16,8 +16,8 @@
 
 namespace easy_grpc {
 namespace client {
-Channel::Channel(grpc_channel* handle, Completion_queue* pool)
-    : handle_(handle), default_pool_(pool) {}
+Channel::Channel(grpc_channel* handle, Completion_queue* queue)
+    : handle_(handle), default_queue_(queue) {}
 
 Channel::~Channel() {
   if (handle_) {
@@ -26,13 +26,21 @@ Channel::~Channel() {
 }
 
 Channel::Channel(Channel&& rhs)
-    : handle_(rhs.handle_), default_pool_(rhs.default_pool_) {
+    : handle_(rhs.handle_), default_queue_(rhs.default_queue_) {
   rhs.handle_ = nullptr;
+}
+
+Completion_queue* Channel::default_queue() const { 
+  return default_queue_; 
+}
+
+grpc_channel* Channel::handle() const { 
+  return handle_; 
 }
 
 Channel& Channel::operator=(Channel&& rhs) {
   handle_ = rhs.handle_;
-  default_pool_ = rhs.default_pool_;
+  default_queue_ = rhs.default_queue_;
 
   rhs.handle_ = nullptr;
   return *this;

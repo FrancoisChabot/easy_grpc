@@ -46,8 +46,8 @@ TEST(test_easy_grpc, simple_rpc) {
 TEST(test_easy_grpc, big_volume) {
   rpc::Environment grpc_env;
 
-  constexpr int receiving_threads = 4;
-  constexpr int sending_threads = 4;
+  constexpr int receiving_threads = 3;
+  constexpr int sending_threads = 3;
   constexpr int rpcs_to_send = 10000;
   
   std::array<rpc::Completion_queue, receiving_threads> server_queues;
@@ -70,7 +70,7 @@ TEST(test_easy_grpc, big_volume) {
   req.set_name("dude");
 
   std::vector<rpc::Future<::tests::TestReply>> results;
-  results.reserve (rpcs_to_send);
+  results.reserve(rpcs_to_send);
 
   for(int i = 0 ; i < rpcs_to_send; ++i) {
     rpc::client::Call_options options;

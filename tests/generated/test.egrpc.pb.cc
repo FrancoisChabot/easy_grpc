@@ -16,8 +16,8 @@ TestService::TestService() {
   });
 }
 
-TestService::Stub::Stub(::easy_grpc::client::Channel* c, ::easy_grpc::Completion_queue* default_pool)
-  : channel_(c), default_queue_(default_pool ? default_pool : c->default_pool())
+TestService::Stub::Stub(::easy_grpc::client::Channel* c, ::easy_grpc::Completion_queue* default_queue)
+  : channel_(c), default_queue_(default_queue ? default_queue : c->default_queue())
   , TestMethod_tag_(c->register_method(kTestService_TestMethod_name)) {}
 
 // TestMethod

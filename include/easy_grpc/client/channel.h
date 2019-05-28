@@ -29,11 +29,10 @@ class Channel {
  public:
   virtual ~Channel();
 
-  Completion_queue* default_pool() const { return default_pool_; }
-
   void* register_method(const char* name);
 
-  grpc_channel* handle() { return handle_; }
+  Completion_queue* default_queue() const;
+  grpc_channel* handle() const;
 
  protected:
   Channel(grpc_channel*, Completion_queue*);
@@ -42,7 +41,7 @@ class Channel {
 
  private:
   grpc_channel* handle_;
-  Completion_queue* default_pool_;
+  Completion_queue* default_queue_;
 
   Channel(const Channel&) = delete;
   Channel& operator=(const Channel&) = delete;

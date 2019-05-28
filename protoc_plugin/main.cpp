@@ -214,9 +214,9 @@ void generate_service_source(const ServiceDescriptor* service,
 
   dst << name
       << "::Stub::Stub(::easy_grpc::client::Channel* c, "
-         "::easy_grpc::Completion_queue* default_pool)\n"
-      << "  : channel_(c), default_queue_(default_pool ? default_pool : "
-         "c->default_pool())";
+         "::easy_grpc::Completion_queue* default_queue)\n"
+      << "  : channel_(c), default_queue_(default_queue ? default_queue : "
+         "c->default_queue())";
   for (int i = 0; i < service->method_count(); ++i) {
     auto method = service->method(i);
     dst << "\n  , " << method->name() << "_tag_(c->register_method("

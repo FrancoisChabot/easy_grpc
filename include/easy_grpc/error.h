@@ -28,13 +28,74 @@ namespace easy_grpc {
       , code_(code) {}
 
     grpc_status_code code() const { return code_; }
+
   private:
     grpc_status_code code_;
   };
 
   namespace error {
+    inline Rpc_error cancelled(const char* what) {
+      return Rpc_error(GRPC_STATUS_CANCELLED, what);
+    }
+
+    inline Rpc_error unknown(const char* what) {
+      return Rpc_error(GRPC_STATUS_UNKNOWN, what);
+    }
+
     inline Rpc_error invalid_argument(const char* what) {
       return Rpc_error(GRPC_STATUS_INVALID_ARGUMENT, what);
+    }
+
+    inline Rpc_error deadline_exceeded(const char* what) {
+      return Rpc_error(GRPC_STATUS_DEADLINE_EXCEEDED, what);
+    }
+
+    inline Rpc_error not_found(const char* what) {
+      return Rpc_error(GRPC_STATUS_NOT_FOUND, what);
+    }
+
+    inline Rpc_error already_exists(const char* what) {
+      return Rpc_error(GRPC_STATUS_ALREADY_EXISTS, what);
+    }
+
+    inline Rpc_error permission_denied(const char* what) {
+      return Rpc_error(GRPC_STATUS_PERMISSION_DENIED, what);
+    }
+
+    inline Rpc_error unauthenticated(const char* what) {
+      return Rpc_error(GRPC_STATUS_UNAUTHENTICATED, what);
+    }
+
+    inline Rpc_error resource_exhausted(const char* what) {
+      return Rpc_error(GRPC_STATUS_RESOURCE_EXHAUSTED, what);
+    }
+
+    inline Rpc_error failed_precondition(const char* what) {
+      return Rpc_error(GRPC_STATUS_FAILED_PRECONDITION, what);
+    }
+
+    inline Rpc_error aborted(const char* what) {
+      return Rpc_error(GRPC_STATUS_ABORTED, what);
+    }
+
+    inline Rpc_error out_of_range(const char* what) {
+      return Rpc_error(GRPC_STATUS_OUT_OF_RANGE, what);
+    }
+
+    inline Rpc_error unimplemented(const char* what) {
+      return Rpc_error(GRPC_STATUS_UNIMPLEMENTED, what);
+    }
+
+    inline Rpc_error internal(const char* what) {
+      return Rpc_error(GRPC_STATUS_INTERNAL, what);
+    }
+
+    inline Rpc_error unavailable(const char* what) {
+      return Rpc_error(GRPC_STATUS_UNAVAILABLE, what);
+    }
+
+    inline Rpc_error data_loss(const char* what) {
+      return Rpc_error(GRPC_STATUS_DATA_LOSS, what);
     }
   }
 
