@@ -1,0 +1,7 @@
+site_name: easy_grpc Docs
+nav:
+    - Home: index.md
+    - Future: future.md
+    - Client: client.md
+    - Server: client.md
+theme: readthedocs

@@ -12,9 +12,6 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 add_subdirectory(protoc_plugin)
 
-
-
-
 add_library(easy_grpc
   src/easy_grpc/client/channel.cpp
   src/easy_grpc/client/unsecure_channel.cpp
@@ -33,8 +30,6 @@ target_include_directories(easy_grpc
 )
 
 target_link_libraries(easy_grpc
-    -Wl,--whole-archive grpc++_reflection.a -Wl,--no-whole-archive
-    grpc++.a
     grpc.a
     gpr.a
     protobuf::libprotobuf
