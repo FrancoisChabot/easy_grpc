@@ -79,6 +79,8 @@ class Server {
   Server& operator=(const Server&) = delete;
 
   Completion_queue_set default_queues_;
+
+  grpc_completion_queue* shutdown_queue_ = nullptr;
 };
 }  // namespace server
 

@@ -32,9 +32,15 @@ namespace server {
     class Unary_call_handler : public Completion_queue::Completion {
     public:
       Unary_call_handler() {
+        grpc_metadata_array_init(&request_metadata_);
         grpc_metadata_array_init(&server_metadata_);
       }
+
       bool exec(bool success) override {
+        grpc_metadata_array_destroy(&request_metadata_);
+        grpc_metadata_array_destroy(&server_metadata_);
+
+        grpc_call_unref(call_);
         return true;
       }
 
@@ -53,7 +59,6 @@ namespace server {
             ops[0].data.send_initial_metadata.count = server_metadata_.count;
             ops[0].data.send_initial_metadata.metadata = server_metadata_.metadata;
             ops[0].data.send_initial_metadata.maybe_compression_level.is_set = false;
-
             
             ops[1].op = GRPC_OP_SEND_MESSAGE;
             ops[1].flags = 0;

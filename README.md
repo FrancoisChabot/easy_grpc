@@ -8,6 +8,11 @@ be quite as optimal as a fully-customized server working on raw completion
 queues, but every effort is being made to get as close as possible while
 maintaining as sane and modern an API as possible.
 
+## Who is this for?
+
+If you want to make gRPC services in C++ that contain methods that 
+have to wait on external conditions before completing, then this is for you.
+
 ## The Goal
 
 With easy_grpc, writing asynchronous rpc servers is simple. This is especially true for
@@ -73,6 +78,7 @@ Next steps:
 - Get second and third opinions on the API before proceeding.
 - Big cleanup and documentation pass.
 - Tests, lots of tests.
+- Secure credentials
 
 ## Examples:
 

@@ -65,9 +65,10 @@ namespace server {
 
 Server::Server(const Config& cfg) 
   : default_queues_(cfg.default_queues_) { 
-  impl_ = grpc_server_create(nullptr, nullptr); 
-  
 
+  shutdown_queue_ = grpc_completion_queue_create_for_next(nullptr);
+  std::cerr << std::hex << (intptr_t)shutdown_queue_ << "\n";
+  impl_ = grpc_server_create(nullptr, nullptr); 
 
   add_listening_ports_(cfg);
 
@@ -96,6 +97,10 @@ Server::Server(const Config& cfg)
   for(auto cq : queues_to_register) {
     grpc_server_register_completion_queue(impl_, cq, nullptr);
   }
+
+  // This is supposed to be necessary, but adding this breaks handling for some reason...
+  grpc_server_register_completion_queue(impl_, shutdown_queue_, nullptr);
+  
 
   grpc_server_start(impl_);
 
@@ -130,11 +135,14 @@ void Server::add_listening_ports_(const Config& cfg) {
 
 Server::~Server() { cleanup_(); }
 
-Server::Server(Server&& rhs) : impl_(rhs.impl_) { rhs.impl_ = nullptr; }
+Server::Server(Server&& rhs) : impl_(rhs.impl_), shutdown_queue_(rhs.shutdown_queue_) { rhs.impl_ = nullptr; rhs.shutdown_queue_= nullptr;}
 
 Server& Server::operator=(Server&& rhs) {
   cleanup_();
   impl_ = rhs.impl_;
+  shutdown_queue_ = rhs.shutdown_queue_;
+
+  rhs.shutdown_queue_ = nullptr;
   rhs.impl_ = nullptr;
 
   return *this;
@@ -142,15 +150,21 @@ Server& Server::operator=(Server&& rhs) {
 
 void Server::cleanup_() {
   if (impl_) {
-
     // Perform a synchronous server shutdown.
-    auto cq = grpc_completion_queue_create_for_pluck(nullptr);
-    grpc_server_shutdown_and_notify(impl_, cq, nullptr);
-    grpc_completion_queue_pluck(cq, nullptr, gpr_inf_future(GPR_CLOCK_REALTIME), nullptr);
-    grpc_completion_queue_destroy(cq);
+    grpc_server_shutdown_and_notify(impl_, shutdown_queue_, nullptr);
+    grpc_server_cancel_all_calls(impl_);
+    auto evt = grpc_completion_queue_next(shutdown_queue_, gpr_inf_future(GPR_CLOCK_REALTIME), nullptr);
+    assert(evt.type == GRPC_OP_COMPLETE);
+    grpc_completion_queue_shutdown(shutdown_queue_);
+
+    // Consume the shutdown event.
+    evt = grpc_completion_queue_next(shutdown_queue_, gpr_inf_future(GPR_CLOCK_REALTIME), nullptr);
+    assert(evt.type == GRPC_QUEUE_SHUTDOWN);
+    grpc_completion_queue_destroy(shutdown_queue_);
 
     // destroy the server.
     grpc_server_destroy(impl_);
+    
   }
 }
 }  // namespace server
