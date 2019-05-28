@@ -4,7 +4,7 @@
 
 #include "test.pb.h"
 
-#include "easy_grpc/gen_support.h"
+#include "easy_grpc/ext_protobuf/gen_support.h"
 
 #include <memory>
 

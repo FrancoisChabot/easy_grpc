@@ -1,4 +1,4 @@
-protobuf_generate_cpp(PROTO_SRCS PROTO_HDRS data.proto)
+find_package(Protobuf REQUIRED)
 
 set(GENERATED_PROTOBUF_PATH ${CMAKE_CURRENT_SOURCE_DIR}/generated)
 
@@ -34,7 +34,7 @@ add_library(hello_proto
 )
 
 target_include_directories(hello_proto PUBLIC .)
-target_link_libraries(hello_proto easy_grpc)
+target_link_libraries(hello_proto easy_grpc protobuf::libprotobuf)
 
 add_executable(hello_server 
   server_main.cpp

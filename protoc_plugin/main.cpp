@@ -273,7 +273,7 @@ std::string generate_header(const FileDescriptor* file) {
   result << "#include \"" << file_name << pb_header_extension << "\""
          << "\n\n";
 
-  result << "#include \"easy_grpc/gen_support.h\""
+  result << "#include \"easy_grpc/ext_protobuf/gen_support.h\""
          << "\n\n";
 
   result << "#include <memory>\n\n";

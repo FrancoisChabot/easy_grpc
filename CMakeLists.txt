@@ -4,7 +4,6 @@ project(easy_grpc VERSION 0.0.1)
 
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
-find_package(Protobuf REQUIRED)
 
 add_subdirectory(protoc_plugin)
 
@@ -30,7 +29,6 @@ target_include_directories(easy_grpc
 target_link_libraries(easy_grpc
     grpc.a
     gpr.a
-    protobuf::libprotobuf
     Threads::Threads
 )
 

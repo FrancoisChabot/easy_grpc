@@ -12,26 +12,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef EASY_GRPC_SERIALIZE_INCLUDED_H
-#define EASY_GRPC_SERIALIZE_INCLUDED_H
+// This header is meant to be included by headers that were generated
+// using the protoc plugin.
+#ifndef EASY_GRPC_EXT_PROTOBUF_GEN_SUPPORT_INCLUDED_H
+#define EASY_GRPC_EXT_PROTOBUF_GEN_SUPPORT_INCLUDED_H
 
-#include "grpc/byte_buffer_reader.h"
-#include "grpc/grpc.h"
+#include "easy_grpc/ext_protobuf/serialize.h"
 
-namespace easy_grpc {
+#include "easy_grpc/client/channel.h"
+#include "easy_grpc/client/stub_impl.h"
 
-template <typename T, typename E = void>
-struct Serializer;
+#include "easy_grpc/server/service.h"
+#include "easy_grpc/server/service_impl.h"
 
-template <typename T>
-grpc_byte_buffer* serialize(const T& data) {
-  return Serializer<T>::serialize(data);
-}
-
-template <typename T>
-T deserialize(grpc_byte_buffer* data) {
-  return Serializer<T>::deserialize(data);
-}
-}  // namespace easy_grpc
+#include "easy_grpc/completion_queue.h"
+#include "easy_grpc/variadic_future.h"
 
 #endif
