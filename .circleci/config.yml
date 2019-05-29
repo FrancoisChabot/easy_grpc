@@ -1,0 +1,23 @@
+version: 2
+jobs:
+  build:
+    docker:
+      - image: francoischabot/easy_grpc_buildenv:latest
+
+    steps:
+      - checkout
+
+      - run:
+          name: Create build script
+          command: |
+            mkdir _bld 
+            cd _bld 
+            cmake ..
+
+      - run:
+          name: Build
+          command: make -j $(nproc)
+
+      - run:
+          name: Test
+          command: ctest
