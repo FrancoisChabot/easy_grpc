@@ -16,6 +16,7 @@
 #define EASY_GRPC_SERVER_SERVER_H_INCLUDED
 
 #include "easy_grpc/server/credentials.h"
+#include "easy_grpc/server/service_config.h"
 #include "easy_grpc/completion_queue.h"
 
 #include "grpc/grpc.h"
@@ -35,17 +36,25 @@ class Config {
  public:
   Config& with_default_listening_queues(Completion_queue_set);
 
-  Config& with_service(Service*);
+
+
+
+
+  template<typename ServiceT>
+  Config& with_service(ServiceT& service) {
+    using service_type = typename ServiceT::service_type;
+
+    return with_service(service_type::get_config(service));
+  }
+
+  Config& with_service(Service_config);
+
 
   Config& with_listening_port(std::string addr,
                               std::shared_ptr<Credentials> creds = {},
                               int* bound_port = nullptr);
 
  private:
-  struct Bound_service {
-    Service* service;
-  };
-
   struct Port {
     std::string addr;
     std::shared_ptr<Credentials> creds;
@@ -53,7 +62,7 @@ class Config {
   };
 
   Completion_queue_set default_queues_;
-  std::vector<Bound_service> services_;
+  std::vector<Service_config> service_cfgs_;
   std::vector<Port> ports_;
 
   friend class Server;

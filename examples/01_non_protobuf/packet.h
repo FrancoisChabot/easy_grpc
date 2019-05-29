@@ -1,10 +1,9 @@
+#ifndef EXAMPLES_01_PACKET_INCLUDED_H_
+#define EXAMPLES_01_PACKET_INCLUDED_H_
+
 #include "easy_grpc/easy_grpc.h"
 
-#include "generated/test.egrpc.pb.h"
-
-#include "gtest/gtest.h"
-
-namespace rpc = easy_grpc;
+#include <cstring>
 
 struct Request_packet {
   int a;
@@ -66,58 +65,4 @@ struct Serializer<Reply_packet> {
 };
 }
 
-class Custom_service {
-public:
-
-  rpc::Future<Reply_packet> DoWork(const Request_packet& req) {
-    Reply_packet result = {req.a, req.a * 2, req.a * req.a};
-    return {result};
-  }
-
-  class Stub {
-  public:
-    Stub(rpc::client::Channel* c) 
-      : DoWork("/test.test/DoWork", c) {}
-
-    rpc::client::Method_stub<Request_packet, Reply_packet> DoWork;
-  };
-
-  rpc::server::Service_config make_config() {
-    rpc::server::Service_config blarg_config("test");
-
-    blarg_config.add_method<Request_packet, Reply_packet>("/test.test/DoWork", [this](Request_packet req){return DoWork(std::move(req));});
-
-    return blarg_config;
-  }
-};
-
-
-TEST(binary_protocol, simple_rpc) {
-  
-  rpc::Environment grpc_env;
-
-  std::array<rpc::Completion_queue, 1> server_queues;
-  rpc::Completion_queue client_queue;
-
-  Custom_service sync_srv;
-
-  int server_port = 0;
-  rpc::server::Server server = rpc::server::Config()
-    .with_default_listening_queues({server_queues.begin(), server_queues.end()})
-    .with_service(sync_srv.make_config())
-    .with_listening_port("127.0.0.1", {}, &server_port);
-
-  EXPECT_NE(0, server_port);
-
-  {
-    rpc::client::Unsecure_channel channel(std::string("127.0.0.1:") + std::to_string(server_port), &client_queue);
-    Custom_service::Stub stub(&channel);
-
-    auto result = stub.DoWork({4}).get();
-
-    EXPECT_EQ(result.a, 4);
-    EXPECT_EQ(result.b, 8);
-    EXPECT_EQ(result.c, 16);
-  }
-  
-}
+#endif

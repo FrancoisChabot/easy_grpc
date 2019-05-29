@@ -10,10 +10,14 @@
 
 namespace pkg {
 
-class HelloService : public ::easy_grpc::server::Service {
+class HelloService {
 public:
-  HelloService();
+  using service_type = HelloService;
+
   virtual ~HelloService() {}
+
+  static const char * kHelloService_SayHello_name;
+  static const char * kHelloService_SayBye_name;
 
   virtual ::easy_grpc::Future<::pkg::HelloReply> SayHello(const ::pkg::HelloRequest&) = 0;
   virtual ::easy_grpc::Future<::pkg::HelloReply> SayBye(const ::pkg::HelloRequest&) = 0;
@@ -41,15 +45,15 @@ public:
     void* SayBye_tag_;
   };
 
-  void visit_methods(::easy_grpc::server::detail::Method_visitor&) override;
+  template<typename ImplT>
+  static ::easy_grpc::server::Service_config get_config(ImplT& impl) {
+    ::easy_grpc::server::Service_config result("HelloService");
 
-  std::unique_ptr<::easy_grpc::server::detail::Method> SayHello_method;
-  std::unique_ptr<::easy_grpc::server::detail::Method> SayBye_method;
+    result.add_method<::pkg::HelloRequest, ::pkg::HelloReply>(kHelloService_SayHello_name, [&impl](::pkg::HelloRequest req){return impl.SayHello(std::move(req));});
+    result.add_method<::pkg::HelloRequest, ::pkg::HelloReply>(kHelloService_SayBye_name, [&impl](::pkg::HelloRequest req){return impl.SayBye(std::move(req));});
 
-private:
-  ::easy_grpc::Future<::pkg::HelloReply> handle_SayHello(::pkg::HelloRequest);
-  ::easy_grpc::Future<::pkg::HelloReply> handle_SayBye(::pkg::HelloRequest);
-
+    return result;
+  }
 };
 
 } // namespacepkg

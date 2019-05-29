@@ -34,5 +34,6 @@ target_link_libraries(easy_grpc
 
 
 add_subdirectory(examples/00_hello_rpc)
+add_subdirectory(examples/01_non_protobuf)
 enable_testing()
 add_subdirectory(tests)

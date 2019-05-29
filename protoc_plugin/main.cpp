@@ -91,11 +91,25 @@ std::vector<std::string> package_parts(const FileDescriptor* file) {
 
 void generate_service_header(const ServiceDescriptor* service,
                              std::ostream& dst) {
-  dst << "class " << service->name()
-      << " : public ::easy_grpc::server::Service {\n"
+ 
+  auto name = service->name();
+
+  auto method_name_cste = [&](auto method) {
+    return std::string("k") + name + "_" + method->name() + "_name";
+  };
+
+  dst << "class " << service->name() << " {\n"
       << "public:\n"
-      << "  " << service->name() << "();\n"
-      << "  virtual ~" << service->name() << "() {}\n\n";
+      << "  using service_type = " << name << ";\n\n"
+      << "  virtual ~" << name << "() {}\n\n";
+
+
+  for (int i = 0; i < service->method_count(); ++i) {
+    auto method = service->method(i);
+
+    dst << "  static const char * " << method_name_cste(method) << ";\n";
+  }
+  dst << "\n";
 
   for (int i = 0; i < service->method_count(); ++i) {
     auto method = service->method(i);
@@ -151,31 +165,20 @@ void generate_service_header(const ServiceDescriptor* service,
   }
   dst << "  };\n\n";
 
-  dst << "  void visit_methods(::easy_grpc::server::detail::Method_visitor&) override;\n\n";
-
+  dst << "  template<typename ImplT>\n"
+      << "  static ::easy_grpc::server::Service_config get_config(ImplT& impl) {\n"
+      << "    ::easy_grpc::server::Service_config result(\""<< name <<"\");\n\n";
   for (int i = 0; i < service->method_count(); ++i) {
     auto method = service->method(i);
     auto input = method->input_type();
     auto output = method->output_type();
-    dst << "  std::unique_ptr<::easy_grpc::server::detail::Method> " << method->name() << "_method;\n";
-    //dst << "  ::easy_grpc::server::detail::Unary_method<" << class_name(input) << ", " << class_name(output) <<  "> " << method->name() << "_method;\n";
+
+    dst << "    result.add_method<" << class_name(input) << ", " << class_name(output) << ">("
+        << method_name_cste(method) << ", [&impl](" << class_name(input) << " req){return impl." << method->name() << "(std::move(req));});\n"; 
   }
 
-  dst << "\n";
-  dst << "private:\n";
-
-  for (int i = 0; i < service->method_count(); ++i) {
-    auto method = service->method(i);
-
-    auto input = method->input_type();
-    auto output = method->output_type();
-
-    dst << "  ::easy_grpc::Future<" << class_name(output) << "> handle_"
-        << method->name() << "("<<class_name(input)<<");\n";
-  }
-
-  dst << "\n";
-
+  dst << "\n    return result;\n";
+  dst << "  }\n";
   dst << "};\n\n";
 }
 
@@ -189,27 +192,14 @@ void generate_service_source(const ServiceDescriptor* service,
     return std::string("k") + name + "_" + method->name() + "_name";
   };
 
-  dst << "namespace {\n";
   for (int i = 0; i < service->method_count(); ++i) {
     auto method = service->method(i);
-    dst << "const char* " << method_name_cste(method) << " = \"/"
+    dst << "const char* " << name << "::" << method_name_cste(method) << " = \"/"
         << service->file()->package() << "." << name << "/" << method->name()
         << "\";\n";
   }
-  dst << "}\n\n";
-
-  dst << name << "::" << name << "() {\n";
-  for (int i = 0; i < service->method_count(); ++i) {
-    auto method = service->method(i);
-    
-    auto input = method->input_type();
-    auto output = method->output_type();
-
-    dst << "  " << method->name() << "_method = ::easy_grpc::server::detail::make_unary_method<" << class_name(input)<<", "<<class_name(output) << ">(" 
-        << method_name_cste(method) << ", [this](" << class_name(input) << " req) {\n    return handle_" << method->name() << "(std::move(req));\n  });\n";
-  }
-
-  dst << "}\n\n";
+  
+  dst << "\n";
 
   dst << name
       << "::Stub::Stub(::easy_grpc::client::Channel* c, "
@@ -239,23 +229,8 @@ void generate_service_source(const ServiceDescriptor* service,
         << class_name(output) << ">(channel_, " << method->name()
         << "_tag_, std::move(req), std::move(options));\n"
         << "};\n\n";
-    
-    dst << "::easy_grpc::Future<" << class_name(output) << "> " << name 
-        << "::handle_" << method->name() << "("<<class_name(input)<<" input) {\n"
-        << "  try {\n"
-        << "    return "<<method->name()<<"(std::move(input));\n"
-        << "  } catch(...) {\n"
-        << "    return std::current_exception();\n"
-        << "  }\n" 
-        << "}\n\n";
   }
 
-  dst << "void " << name << "::visit_methods(::easy_grpc::server::detail::Method_visitor& visitor) {\n";
-    for (int i = 0; i < service->method_count(); ++i) {
-    auto method = service->method(i);
-    dst << "  visitor.visit(*" << method->name() << "_method);\n";
-  }
-  dst << "}\n";
 }
 
 std::string generate_header(const FileDescriptor* file) {

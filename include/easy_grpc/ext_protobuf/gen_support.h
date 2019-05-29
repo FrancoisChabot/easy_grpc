@@ -23,6 +23,7 @@
 #include "easy_grpc/client/stub_impl.h"
 
 #include "easy_grpc/server/service.h"
+#include "easy_grpc/server/service_config.h"
 #include "easy_grpc/server/service_impl.h"
 
 #include "easy_grpc/completion_queue.h"

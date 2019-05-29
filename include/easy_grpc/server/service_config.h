@@ -12,34 +12,35 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "easy_grpc/server/server.h"
-#include "easy_grpc/server/service.h"
+#ifndef EASY_GRPC_SERVER_SERVICE_CONFIG_H_INCLUDED
+#define EASY_GRPC_SERVER_SERVICE_CONFIG_H_INCLUDED
+
 #include "easy_grpc/server/service_impl.h"
 
-#include <set>
-#include <cassert>
+#include <string>
 
 namespace easy_grpc {
 
 namespace server {
 
-Config& Config::with_default_listening_queues(Completion_queue_set queues) {
-  default_queues_ = std::move(queues);
-  return *this;
-}
+class Service_config {
+public:
+  Service_config(const char * name) : name_(name) {}
 
-Config& Config::with_service(Service_config cfg) {
-  service_cfgs_.push_back(std::move(cfg));
-  return *this; 
-}
+  template<typename InT, typename OutT, typename CbT>
+  void add_method(const char * name, CbT cb, Completion_queue_set queues = {}) {
+    methods_.emplace_back(detail::make_unary_method<InT, OutT>(name, std::move(cb)));
+  }
 
-Config& Config::with_listening_port(std::string addr,
-                                    std::shared_ptr<Credentials> creds,
-                                    int* bound_port) {
-  ports_.push_back({std::move(addr), creds, bound_port});
-  return *this;
-}
-
+  const std::vector<std::unique_ptr<detail::Method>>& methods() const {
+    return methods_;
+  }
+private:
+  const char* name_;
+  std::vector<std::unique_ptr<detail::Method>> methods_;
+};
 }  // namespace server
 
 }  // namespace easy_grpc
+
+#endif

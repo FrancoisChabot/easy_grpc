@@ -10,10 +10,13 @@
 
 namespace tests {
 
-class TestService : public ::easy_grpc::server::Service {
+class TestService {
 public:
-  TestService();
+  using service_type = TestService;
+
   virtual ~TestService() {}
+
+  static const char * kTestService_TestMethod_name;
 
   virtual ::easy_grpc::Future<::tests::TestReply> TestMethod(const ::tests::TestRequest&) = 0;
 
@@ -37,13 +40,14 @@ public:
     void* TestMethod_tag_;
   };
 
-  void visit_methods(::easy_grpc::server::detail::Method_visitor&) override;
+  template<typename ImplT>
+  static ::easy_grpc::server::Service_config get_config(ImplT& impl) {
+    ::easy_grpc::server::Service_config result("TestService");
 
-  std::unique_ptr<::easy_grpc::server::detail::Method> TestMethod_method;
+    result.add_method<::tests::TestRequest, ::tests::TestReply>(kTestService_TestMethod_name, [&impl](::tests::TestRequest req){return impl.TestMethod(std::move(req));});
 
-private:
-  ::easy_grpc::Future<::tests::TestReply> handle_TestMethod(::tests::TestRequest);
-
+    return result;
+  }
 };
 
 } // namespacetests

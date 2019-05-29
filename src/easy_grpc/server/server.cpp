@@ -73,32 +73,34 @@ Server::Server(const Config& cfg)
   sd_queue_attribs.cq_polling_type = GRPC_CQ_NON_POLLING;
   sd_queue_attribs.cq_shutdown_cb = nullptr;
 
-  shutdown_queue_ = grpc_completion_queue_create(grpc_completion_queue_factory_lookup(&sd_queue_attribs), &sd_queue_attribs, nullptr);
-
+  shutdown_queue_ = grpc_completion_queue_create(
+      grpc_completion_queue_factory_lookup(&sd_queue_attribs), 
+      &sd_queue_attribs, 
+      nullptr);
 
   impl_ = grpc_server_create(nullptr, nullptr); 
 
   add_listening_ports_(cfg);
 
-  std::vector<Service_binder::Method_reg_op> all_methods;
-
-  for(const auto& service: cfg.services_) {
-    Completion_queue_set service_default_queues = service.service->default_queues();
-    if(service_default_queues.empty()) {
-      service_default_queues = default_queues_;
-    }
-
-    Service_binder bind_iface(this, service_default_queues);
-    service.service->visit_methods(bind_iface);
-    all_methods.insert(all_methods.end(), std::make_move_iterator(bind_iface.ops_.begin()), std::make_move_iterator(bind_iface.ops_.end()));
-  }
-
   // Put queues in a global set so that we can dedup them for registration.
   std::set<grpc_completion_queue*> queues_to_register;
+  queues_to_register.insert(shutdown_queue_);
 
-  for(auto& m : all_methods) {
-    for(auto& cq : m.queues_) {
-      queues_to_register.insert(cq.get().handle());
+  std::vector<std::pair<detail::Method*, void*>> all_methods;
+
+  for(const auto& service : cfg.service_cfgs_) {
+    for(const auto & method_ptr : service.methods()) {
+      auto method = method_ptr.get();
+      all_methods.emplace_back(method, nullptr);
+
+      auto queues = method->queues();
+      if(queues.empty()) {
+        queues = default_queues_;
+      }
+      for(auto& cq : queues) {
+        
+        queues_to_register.insert(cq.get().handle());
+      }
     }
   }
 
@@ -106,19 +108,32 @@ Server::Server(const Config& cfg)
     grpc_server_register_completion_queue(impl_, cq, nullptr);
   }
 
-
-  grpc_server_register_completion_queue(impl_, shutdown_queue_, nullptr);
-  
+  // Register the methods.
+  for(auto& m : all_methods) {
+    auto method_ptr = std::get<0>(m);
+    std::get<1>(m) = grpc_server_register_method(
+          impl_, method_ptr->name(), nullptr,
+          GRPC_SRM_PAYLOAD_READ_INITIAL_BYTE_BUFFER,
+          0);
+  }
 
   grpc_server_start(impl_);
 
-  // Start handling the methods
-
+  // Start listening for each method
   for(auto& m : all_methods) {
-    for(auto& cq : m.queues_) {
-      m.method_->listen(impl_, m.handle_, cq.get().handle());
+    auto method_ptr = std::get<0>(m);
+    auto handle = std::get<1>(m);
+
+    auto queues = method_ptr->queues();
+    if(queues.empty()) {
+      queues = default_queues_;
+    }
+
+    for(auto& cq : queues) {
+      method_ptr->listen(impl_, handle, cq.get().handle());
     }
   }
+
 }
 
 void Server::add_listening_ports_(const Config& cfg) {

@@ -146,19 +146,21 @@ namespace server {
     template<typename ReqT, typename RepT, typename HandlerT>
     class Unary_call_listener : public Completion_queue::Completion {
     public:
-      Unary_call_listener(grpc_server* server, void* registration, grpc_completion_queue* cq, const HandlerT& handler)
+      Unary_call_listener(grpc_server* server, void* registration, grpc_completion_queue* cq, HandlerT handler)
         : srv_(server)
         , reg_(registration)
         , cq_(cq)
-        , handler_(handler){
+        , handler_(std::move(handler)){
           
           // It's really important that inject is not called here. As the object
           // could end up being deleted before it's fully constructed.
         }
 
       bool exec(bool success) override {
+        EASY_GRPC_TRACE(Unary_call_listener, exec);
 
         if(success) {
+          
           pending_call_->perform(handler_);
         
           // Listen for a new call.
@@ -169,6 +171,8 @@ namespace server {
        }
 
       void inject() {
+        EASY_GRPC_TRACE(Unary_call_listener, inject);
+
         pending_call_ = new Unary_call_handler<ReqT, RepT>;
         auto status = grpc_server_request_registered_call(
           srv_, reg_, &pending_call_->call_,
@@ -176,11 +180,10 @@ namespace server {
           &pending_call_->payload_, cq_, cq_, this);
       }
 
-      const HandlerT& handler_;
+      HandlerT handler_;
       grpc_server* srv_;
       void* reg_;
       grpc_completion_queue* cq_;
-
 
       Unary_call_handler<ReqT, RepT>* pending_call_;
 

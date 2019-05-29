@@ -21,8 +21,10 @@
 #include "easy_grpc/variadic_future.h"
 
 #include "easy_grpc/client/unsecure_channel.h"
+#include "easy_grpc/client/method_stub.h"
 
 #include "easy_grpc/server/server.h"
 #include "easy_grpc/server/service.h"
+#include "easy_grpc/server/service_config.h"
 
 #endif

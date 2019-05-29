@@ -31,7 +31,6 @@ class Service {
   void set_default_queues(Completion_queue_set queues);
   const Completion_queue_set& default_queues();
   
-  virtual void visit_methods(::easy_grpc::server::detail::Method_visitor&) = 0;
 private:
   
   Completion_queue_set default_queues_;

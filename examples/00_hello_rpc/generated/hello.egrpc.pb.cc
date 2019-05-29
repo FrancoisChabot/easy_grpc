@@ -6,19 +6,8 @@ namespace pkg {
 
 // ********** HelloService ********** //
 
-namespace {
-const char* kHelloService_SayHello_name = "/pkg.HelloService/SayHello";
-const char* kHelloService_SayBye_name = "/pkg.HelloService/SayBye";
-}
-
-HelloService::HelloService() {
-  SayHello_method = ::easy_grpc::server::detail::make_unary_method<::pkg::HelloRequest, ::pkg::HelloReply>(kHelloService_SayHello_name, [this](::pkg::HelloRequest req) {
-    return handle_SayHello(std::move(req));
-  });
-  SayBye_method = ::easy_grpc::server::detail::make_unary_method<::pkg::HelloRequest, ::pkg::HelloReply>(kHelloService_SayBye_name, [this](::pkg::HelloRequest req) {
-    return handle_SayBye(std::move(req));
-  });
-}
+const char* HelloService::kHelloService_SayHello_name = "/pkg.HelloService/SayHello";
+const char* HelloService::kHelloService_SayBye_name = "/pkg.HelloService/SayBye";
 
 HelloService::Stub::Stub(::easy_grpc::client::Channel* c, ::easy_grpc::Completion_queue* default_queue)
   : channel_(c), default_queue_(default_queue ? default_queue : c->default_queue())
@@ -31,31 +20,11 @@ HelloService::Stub::Stub(::easy_grpc::client::Channel* c, ::easy_grpc::Completio
   return ::easy_grpc::client::start_unary_call<::pkg::HelloReply>(channel_, SayHello_tag_, std::move(req), std::move(options));
 };
 
-::easy_grpc::Future<::pkg::HelloReply> HelloService::handle_SayHello(::pkg::HelloRequest input) {
-  try {
-    return SayHello(std::move(input));
-  } catch(...) {
-    return std::current_exception();
-  }
-}
-
 // SayBye
 ::easy_grpc::Future<::pkg::HelloReply> HelloService::Stub::SayBye(::pkg::HelloRequest req, ::easy_grpc::client::Call_options options) {
   if(!options.completion_queue) { options.completion_queue = default_queue_; }
   return ::easy_grpc::client::start_unary_call<::pkg::HelloReply>(channel_, SayBye_tag_, std::move(req), std::move(options));
 };
 
-::easy_grpc::Future<::pkg::HelloReply> HelloService::handle_SayBye(::pkg::HelloRequest input) {
-  try {
-    return SayBye(std::move(input));
-  } catch(...) {
-    return std::current_exception();
-  }
-}
-
-void HelloService::visit_methods(::easy_grpc::server::detail::Method_visitor& visitor) {
-  visitor.visit(*SayHello_method);
-  visitor.visit(*SayBye_method);
-}
 } // namespacepkg
 

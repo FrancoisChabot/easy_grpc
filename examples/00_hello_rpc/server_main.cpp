@@ -11,7 +11,7 @@ using pkg::HelloService;
 using pkg::HelloRequest;
 using pkg::HelloReply;
 
-class Hello_impl : public HelloService {
+class Hello_impl final{
 public:
   // Says hello
   Future<HelloReply> SayHello(const HelloRequest& req) {
@@ -55,7 +55,7 @@ int main() {
     .with_default_listening_queues({server_cqs.begin(), server_cqs.end()})
 
     // Use our service
-    .with_service(&service)
+    .with_service(HelloService::get_config(service))
 
     // Open an unsecured port
     .with_listening_port("0.0.0.0:12345");
