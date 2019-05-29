@@ -30,6 +30,7 @@ struct Serializer<
 
     msg.SerializeWithCachedSizesToArray(GRPC_SLICE_START_PTR(slice));
 
+    
     return grpc_raw_byte_buffer_create(&slice, 1);
   }
 

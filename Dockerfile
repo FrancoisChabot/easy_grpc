@@ -9,7 +9,7 @@ RUN update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-8 20
 
 # install protobuf first, then grpc
 ARG GOOGLE_TEST_RELEASE_TAG=release-1.8.1
-ARG GRPC_RELEASE_TAG=v1.19.1
+ARG GRPC_RELEASE_TAG=v1.21.1
 
 RUN git clone -b ${GRPC_RELEASE_TAG} --single-branch https://github.com/grpc/grpc /var/local/src/grpc && \
     cd /var/local/src/grpc && \

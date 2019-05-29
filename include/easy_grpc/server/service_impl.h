@@ -48,6 +48,7 @@ namespace server {
       void perform(const HandlerT& handler) {
         assert(payload_);
         auto req = deserialize<ReqT>(payload_);
+        grpc_byte_buffer_destroy(payload_);
         Future<RepT> result = handler(req);
         result.then_finally_expect([this](expected<RepT> rep){
           if(rep.has_value()) {
@@ -60,10 +61,11 @@ namespace server {
             ops[0].data.send_initial_metadata.metadata = server_metadata_.metadata;
             ops[0].data.send_initial_metadata.maybe_compression_level.is_set = false;
             
+            auto buffer = serialize(rep.value());
             ops[1].op = GRPC_OP_SEND_MESSAGE;
             ops[1].flags = 0;
             ops[1].reserved = nullptr;
-            ops[1].data.send_message.send_message = serialize(rep.value());
+            ops[1].data.send_message.send_message = buffer;
 
             ops[2].op = GRPC_OP_SEND_STATUS_FROM_SERVER;
             ops[2].flags = 0;
@@ -79,6 +81,8 @@ namespace server {
             ops[3].data.recv_close_on_server.cancelled = &cancelled_;
 
             auto call_status = grpc_call_start_batch(call_, ops.data(), ops.size(), this, nullptr);
+
+            grpc_byte_buffer_destroy(buffer);
 
             if(call_status != GRPC_CALL_OK) {
               std::cerr << "something went wrong...\n";
@@ -156,17 +160,24 @@ namespace server {
           // could end up being deleted before it's fully constructed.
         }
 
+      ~Unary_call_listener() {
+        if(pending_call_) {
+          delete pending_call_;
+        }
+      }
       bool exec(bool success) override {
         EASY_GRPC_TRACE(Unary_call_listener, exec);
 
         if(success) {
           
           pending_call_->perform(handler_);
-        
+          pending_call_ = nullptr;
+
           // Listen for a new call.
           inject();
           return false; // This object is recycled.
         }
+
         return true;
        }
 
@@ -185,7 +196,7 @@ namespace server {
       void* reg_;
       grpc_completion_queue* cq_;
 
-      Unary_call_handler<ReqT, RepT>* pending_call_;
+      Unary_call_handler<ReqT, RepT>* pending_call_ = nullptr;
 
     };
 

@@ -35,6 +35,7 @@ template <typename T>
 }  // namespace easy_grpc
 
 
-#define EASY_GRPC_TRACE(ctx, location) std::cerr << #ctx << " : " << #location << "\n";
+#define EASY_GRPC_TRACE(ctx, location)
+//#define EASY_GRPC_TRACE(ctx, location) std::cerr << #ctx << " : " << #location << "\n";
 
 #endif

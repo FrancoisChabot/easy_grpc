@@ -13,6 +13,8 @@
 // limitations under the License.
 
 #include "easy_grpc/completion_queue.h"
+#include "easy_grpc/config.h"
+
 #include <cassert>
 #include <iostream>
 
@@ -29,12 +31,12 @@ Completion_queue::~Completion_queue() {
 }
 
 void Completion_queue::worker_main() {
-  std::cerr << "Queue consumer started\n";
+  EASY_GRPC_TRACE(Completion_queue, start);
+
   while (1) {
     auto event = grpc_completion_queue_next(
         handle_, gpr_inf_future(GPR_CLOCK_REALTIME), nullptr);
     if (event.type == GRPC_OP_COMPLETE) {
-      std::cerr << "Consuming from queue...\n";
       Completion* completion = reinterpret_cast<Completion*>(event.tag);
       try {
         bool kill = completion->exec(event.success);
@@ -49,6 +51,5 @@ void Completion_queue::worker_main() {
       break;
     }
   }
-  std::cerr << "Queue consumer finished\n";
 }
 }  // namespace easy_grpc
