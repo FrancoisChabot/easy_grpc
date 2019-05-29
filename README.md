@@ -1,3 +1,5 @@
+[![CircleCI](https://circleci.com/gh/FrancoisChabot/easy_grpc.svg?style=svg)](https://circleci.com/gh/FrancoisChabot/easy_grpc)
+
 # easy_grpc
 
 A future-based gRPC API for C++.
