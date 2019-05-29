@@ -24,4 +24,4 @@ jobs:
           name: Test
           command: |
             cd _bld 
-            ctest
+            ctest -T all

@@ -2,10 +2,19 @@ cmake_minimum_required(VERSION 3.10)
 
 project(easy_grpc VERSION 0.0.1)
 
+set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
+
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
 
+ENABLE_TESTING()
+include(CTest)
+include(CodeCoverage)
+APPEND_COVERAGE_COMPILER_FLAGS()
+
 add_subdirectory(protoc_plugin)
+
+
 
 add_library(easy_grpc
   src/easy_grpc/client/channel.cpp
@@ -36,5 +45,6 @@ target_link_libraries(easy_grpc
 add_subdirectory(examples/00_hello_rpc)
 add_subdirectory(examples/01_non_protobuf)
 
-include (CTest)
+
+
 add_subdirectory(tests)
