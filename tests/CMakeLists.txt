@@ -41,8 +41,6 @@ add_executable(easy_grpc_tests
   server.cpp
 )
 
-
-
 target_link_libraries(easy_grpc_tests easy_grpc GTest::gtest_main GTest::gtest GTest::gmock protobuf::libprotobuf-lite --coverage)
 target_include_directories(easy_grpc_tests PRIVATE .)
 
@@ -52,7 +50,5 @@ if(CMAKE_COMPILER_IS_GNUCXX)
     EXECUTABLE ctest 
     DEPENDENCIES easy_grpc_tests)
 endif()
-
-
 
 gtest_discover_tests(easy_grpc_tests)
