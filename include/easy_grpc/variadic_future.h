@@ -60,7 +60,6 @@ struct is_future<Future<Ts...>> : public std::true_type {};
 template <typename T>
 constexpr bool is_future_v = is_future<T>::value;
 
-#pragma region Future_handler_base
 // The interface to the fully realized future callback handling.
 
 class Immediate_queue {};
@@ -109,6 +108,7 @@ class Future_handler_base : public Future_handler_iface<Ts...> {
   using queue_type = QueueT;
 
   Future_handler_base(QueueT* q) : queue_(q) {}
+  ~Future_handler_base() {}
 
  protected:
   QueueT* get_queue() { return queue_; }
@@ -125,10 +125,6 @@ class Future_handler_base<Immediate_queue, Ts...>
  protected:
   constexpr static Immediate_queue* get_queue() { return nullptr; }
 };
-
-#pragma endregion
-
-#pragma region Future_then_handler
 
 template <typename T>
 struct Storage_for_cb_result {
@@ -206,10 +202,6 @@ class Future_then_handler : public Future_handler_base<QueueT, Ts...> {
   dst_type dst_;
   CbT cb_;
 };
-
-#pragma endregion
-
-#pragma region Future_then_expect_handler
 
 template <typename CbT, typename... Ts>
 struct Expect_then_cb_resolver {
@@ -295,9 +287,6 @@ class Future_then_expect_handler : public Future_handler_base<QueueT, Ts...> {
   dst_type dst_;
   CbT cb_;
 };
-#pragma endregion
-
-#pragma region Future_then_finally_handler
 
 template <typename CbT, typename QueueT, typename... Ts>
 class Future_then_finally_handler : public Future_handler_base<QueueT, Ts...> {
@@ -331,10 +320,6 @@ class Future_then_finally_handler : public Future_handler_base<QueueT, Ts...> {
     // Swallowed
   }
 };
-
-#pragma endregion
-
-#pragma region Future_then_finally_expect_handler
 
 // handling for then_expect()
 template <typename CbT, typename QueueT, typename... Ts>
@@ -376,9 +361,6 @@ class Future_then_finally_expect_handler
   }
 };
 
-#pragma endregion
-
-#pragma region Future_storage
 // Holds the shared state associated with a Future<>.
 template <typename... Ts>
 class Future_storage {
@@ -448,9 +430,11 @@ class Future_storage {
 
   ~Future_storage() {
     switch (state_) {
+      // LCOV_EXCL_START
       case State::PENDING:
         assert(false);
         break;
+      // LCOV_EXCL_END
       case State::READY:
         delete callbacks_;
         break;
@@ -486,10 +470,8 @@ class Future_storage {
   std::mutex mtx;
 };
 
-#pragma endregion
 
 }  // namespace detail
-#pragma region Future
 template <typename... Ts>
 class Future {
  public:
@@ -650,9 +632,6 @@ class Future {
   std::shared_ptr<storage_type> storage_;
 };
 
-#pragma endregion
-
-#pragma region Promise
 template <typename... Ts>
 class Promise {
  public:
@@ -683,10 +662,6 @@ class Promise {
  private:
   std::shared_ptr<storage_type> storage_;
 };
-
-#pragma endregion
-
-#pragma region Tie
 
 namespace detail {
 
@@ -743,8 +718,6 @@ Future<Ts...> tie(Future<Ts>... futs) {
 
   return landing->dst_;
 }
-
-#pragma endregion
 
 }  // namespace easy_grpc
 #endif
