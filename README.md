@@ -1,4 +1,5 @@
 [![CircleCI](https://circleci.com/gh/FrancoisChabot/easy_grpc.svg?style=svg)](https://circleci.com/gh/FrancoisChabot/easy_grpc)
+[![codecov](https://codecov.io/gh/FrancoisChabot/easy_grpc/branch/master/graph/badge.svg)](https://codecov.io/gh/FrancoisChabot/easy_grpc)
 
 # easy_grpc
 
