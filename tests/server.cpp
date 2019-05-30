@@ -15,6 +15,30 @@ public:
     return {result};
   }
 };
+
+class Failing_impl : public tests::TestService {
+public:
+  ::rpc::Future<::tests::TestReply> TestMethod(const ::tests::TestRequest& req) override {
+    throw rpc::error::unimplemented("not done");
+  }
+};
+
+
+class Failure_returning_impl : public tests::TestService {
+public:
+  ::rpc::Future<::tests::TestReply> TestMethod(const ::tests::TestRequest& req) override {
+    rpc::Promise<::tests::TestReply> prom;
+    auto result = prom.get_future();
+    try {
+      throw rpc::error::unimplemented("not done");
+    }
+    catch(...) {
+      prom.set_exception(std::current_exception());
+    }
+
+    return result;
+  }
+};
 }
 
 TEST(server, bind_failure) {
@@ -33,14 +57,59 @@ TEST(server, bind_failure) {
   EXPECT_THROW( rpc::server::Server(std::move(cfg)), std::runtime_error);
 }
 
+TEST(server, failing_call) {
+  rpc::Environment env;
+  
+  std::array<rpc::Completion_queue, 1> server_queues;
+  rpc::Completion_queue client_queue;
+  
+  Failing_impl failing_srv;
+
+  auto cfg = rpc::server::Config();
+
+  int server_port = 0;
+  cfg.with_default_listening_queues({server_queues.begin(), server_queues.end()})
+    .with_service(failing_srv)
+    .with_listening_port("127.0.0.1", {}, &server_port);
+
+  rpc::client::Unsecure_channel channel(std::string("127.0.0.1:") + std::to_string(server_port), &client_queue);
+  tests::TestService::Stub stub(&channel);
+
+  ::tests::TestRequest req;
+  req.set_name("dude");
+
+  EXPECT_THROW(stub.TestMethod(req).get(), rpc::Rpc_error);
+}
+
+TEST(server, failing_async_call) {
+  rpc::Environment env;
+  
+  std::array<rpc::Completion_queue, 1> server_queues;
+  rpc::Completion_queue client_queue;
+  
+  Failure_returning_impl failing_srv;
+
+  auto cfg = rpc::server::Config();
+
+  int server_port = 0;
+  cfg.with_default_listening_queues({server_queues.begin(), server_queues.end()})
+    .with_service(failing_srv)
+    .with_listening_port("127.0.0.1", {}, &server_port);
+
+  rpc::client::Unsecure_channel channel(std::string("127.0.0.1:") + std::to_string(server_port), &client_queue);
+  tests::TestService::Stub stub(&channel);
+
+  ::tests::TestRequest req;
+  req.set_name("dude");
+
+  EXPECT_THROW(stub.TestMethod(req).get(), rpc::Rpc_error);
+}
+
 
 TEST(server, move_server) {
   rpc::Environment env;
   
   std::array<rpc::Completion_queue, 1> server_queues;
-
-
-    
 
   Test_sync_impl sync_srv;
 

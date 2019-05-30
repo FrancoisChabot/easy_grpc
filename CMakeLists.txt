@@ -18,7 +18,7 @@ if(CMAKE_COMPILER_IS_GNUCXX)
     set(COVERAGE_LCOV_EXCLUDES 
       '${PROJECT_SOURCE_DIR}/examples/*' 
       '${PROJECT_SOURCE_DIR}/protoc_plugin/*' 
-      '*/third_party/*' 
+      '${PROJECT_SOURCE_DIR}/include/easy_grpc/third_party/*' 
       '/usr/*'
     )
     APPEND_COVERAGE_COMPILER_FLAGS()
