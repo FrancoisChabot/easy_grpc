@@ -2,10 +2,9 @@ FROM ubuntu:18.10
 
 RUN apt-get update && apt-get install -y \
   build-essential autogen autoconf git pkg-config \
-  automake libtool curl make g++-8 unzip cmake libgflags-dev valgrind python3 python3-pip \
+  automake libtool curl make g++-8 unzip cmake libgflags-dev valgrind lcov \
   && apt-get clean
 
-RUN pip3 install cpp-coveralls
 RUN update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-8 20
 
 ARG GOOGLE_TEST_RELEASE_TAG=release-1.8.1

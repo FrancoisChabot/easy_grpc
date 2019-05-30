@@ -10,6 +10,11 @@ find_package(Threads REQUIRED)
 SET(COVERAGE OFF CACHE BOOL "Coverage")
 
 
+set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
+if(CMAKE_COMPILER_IS_GNUCXX)
+    include(CodeCoverage)
+    APPEND_COVERAGE_COMPILER_FLAGS()
+endif()
 
 include(CTest)
 

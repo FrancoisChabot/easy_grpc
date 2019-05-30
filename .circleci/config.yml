@@ -29,12 +29,6 @@ jobs:
       - run:
           name: Coverage
           command: |
-            coveralls --gcov-options '\-lp' --build-root _bld \
-              -e examples \
-              -e tests/generated \
-              -e protoc_plugin \
-              -e _bld/external \
-              -e _bld/include \
-              -e _bld/CMakeFiles/3.12.1 \
-              -e _bld/CMakeFiles/feature_tests.c \
-              -e _bld/CMakeFiles/feature_tests.cxx
+            cd _bld
+            make test_coverage
+            bash <(curl -s https://codecov.io/bash) -f test_coverage.info || echo "Codecov did not collect coverage reports"
