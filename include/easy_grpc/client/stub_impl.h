@@ -52,7 +52,7 @@ class Call_completion final : public Completion_queue::Completion {
     grpc_call_unref(call_);
   }
 
-  bool exec(bool success) override {
+  bool exec(bool success) noexcept override {
     if (status_ == GRPC_STATUS_OK) {
       rep_.set_value(deserialize<RepT>(recv_buffer_));
     }

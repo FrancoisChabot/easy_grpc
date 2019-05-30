@@ -36,7 +36,7 @@ namespace server {
         grpc_metadata_array_init(&server_metadata_);
       }
 
-      bool exec(bool success) override {
+      bool exec(bool success) noexcept override {
         grpc_metadata_array_destroy(&request_metadata_);
         grpc_metadata_array_destroy(&server_metadata_);
 
@@ -165,7 +165,7 @@ namespace server {
           delete pending_call_;
         }
       }
-      bool exec(bool success) override {
+      bool exec(bool success) noexcept override {
         EASY_GRPC_TRACE(Unary_call_listener, exec);
 
         if(success) {

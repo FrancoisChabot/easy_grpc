@@ -29,7 +29,7 @@ class Completion_queue {
     virtual ~Completion() {}
 
     // TODO: replace bool with an enum
-    virtual bool exec(bool success) = 0;
+    virtual bool exec(bool success) noexcept = 0;
   };
 
   Completion_queue();
