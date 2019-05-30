@@ -20,7 +20,7 @@
 
 namespace easy_grpc {
 // This enables agressive runtime validation.
-constexpr bool easy_grpc_validation_enabled = false;
+constexpr bool easy_grpc_validation_enabled = true;
 constexpr bool easy_grpc_tracing_enabled = false;
 }  // namespace easy_grpc
 

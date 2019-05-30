@@ -28,19 +28,6 @@ Environment::Environment() {
   grpc_init();
 }
 
-Environment::Environment(Environment&& rhs) {
-  if (&rhs == singleton) {
-    singleton = this;
-  }
-}
-
-Environment& Environment::operator=(Environment&& rhs) {
-  if (&rhs == singleton) {
-    singleton = this;
-  }
-  return *this;
-}
-
 Environment::~Environment() {
   if (singleton == this) {
     singleton = nullptr;

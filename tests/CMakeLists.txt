@@ -34,6 +34,7 @@ add_executable(easy_grpc_tests
   generated/test.egrpc.pb.cc
   generated/test.pb.cc
   binary_protocol.cpp
+  environment.cpp
   end_to_end.cpp
   future.cpp
 )

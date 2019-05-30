@@ -26,12 +26,11 @@ namespace easy_grpc {
 class [[nodiscard]] Environment {
   Environment(const Environment&) = delete;
   Environment& operator=(const Environment&) = delete;
+  Environment(Environment &&) = delete;
+  Environment& operator=(Environment&&) = delete;
 
  public:
   Environment();
-  Environment(Environment &&);
-  Environment& operator=(Environment&&);
-
   ~Environment();
 
   static void assert_valid() {
