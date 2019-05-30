@@ -38,13 +38,9 @@ void Completion_queue::worker_main() {
         handle_, gpr_inf_future(GPR_CLOCK_REALTIME), nullptr);
     if (event.type == GRPC_OP_COMPLETE) {
       Completion* completion = reinterpret_cast<Completion*>(event.tag);
-      try {
-        bool kill = completion->exec(event.success);
-        if(kill) {
-          delete completion;
-        }
-      } catch (...) {
-        // TODO: This should get reported somehow...
+      bool kill = completion->exec(event.success);
+      if(kill) {
+        delete completion;
       }
     } else {
       assert(event.type == GRPC_QUEUE_SHUTDOWN);
