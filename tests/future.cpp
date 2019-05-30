@@ -38,6 +38,23 @@ TEST(Future, pre_filled_future) {
   EXPECT_EQ(x.get(), 12);
 }
 
+// This cannot be a constructor because Future<> would have a default constructor that fills it...
+TEST(Future, moved_pre_filled_future) {
+  rpc::Future<int> x(12);
+  rpc::Future<int> y(std::move(x));
+
+  EXPECT_EQ(y.get(), 12);
+}
+
+TEST(Future, assign_moved_pre_filled_future) {
+  rpc::Future<int> x(12);
+  rpc::Future<int> y;
+
+  y = std::move(x);
+  x = std::move(y);
+
+  EXPECT_EQ(x.get(), 12);
+}
 
 TEST(Future, fill_from_promise_mt) {
   rpc::Promise<int> prom;
