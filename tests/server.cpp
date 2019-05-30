@@ -77,7 +77,7 @@ TEST(server, failing_call) {
   int server_port = 0;
   cfg.with_default_listening_queues({server_queues.begin(), server_queues.end()})
     .with_service(failing_srv)
-    .with_listening_port("127.0.0.1", {}, &server_port);
+    .with_listening_port("127.0.0.1:0", {}, &server_port);
 
   rpc::server::Server srv(cfg);
 
@@ -103,7 +103,7 @@ TEST(server, failing_with_junk) {
   int server_port = 0;
   cfg.with_default_listening_queues({server_queues.begin(), server_queues.end()})
     .with_service(failing_srv)
-    .with_listening_port("127.0.0.1", {}, &server_port);
+    .with_listening_port("127.0.0.1:0", {}, &server_port);
 
   rpc::server::Server srv(cfg);
 
@@ -129,7 +129,7 @@ TEST(server, failing_async_call) {
   int server_port = 0;
   cfg.with_default_listening_queues({server_queues.begin(), server_queues.end()})
     .with_service(failing_srv)
-    .with_listening_port("127.0.0.1", {}, &server_port);
+    .with_listening_port("127.0.0.1:0", {}, &server_port);
 
   rpc::server::Server srv(cfg);
 
@@ -155,7 +155,7 @@ TEST(server, move_server) {
   int server_port = 0;
   cfg.with_default_listening_queues({server_queues.begin(), server_queues.end()})
     .with_service(sync_srv)
-    .with_listening_port("127.0.0.1", {}, &server_port);
+    .with_listening_port("127.0.0.1:0", {}, &server_port);
 
   ::tests::TestRequest req;
   req.set_name("dude");

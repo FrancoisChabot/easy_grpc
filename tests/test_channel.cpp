@@ -30,7 +30,7 @@ TEST(channel, simple_connection) {
   rpc::server::Server srv(rpc::server::Config()
     .with_default_listening_queues({sync_srv.queues.begin(), sync_srv.queues.end()})
     .with_service(sync_srv)
-    .with_listening_port("127.0.0.1", {}, &server_port)
+    .with_listening_port("127.0.0.1:0", {}, &server_port)
   );
 
   rpc::Completion_queue client_queue;
@@ -52,7 +52,7 @@ TEST(channel, delete_from_base_class) {
   rpc::server::Server srv(rpc::server::Config()
     .with_default_listening_queues({sync_srv.queues.begin(), sync_srv.queues.end()})
     .with_service(sync_srv)
-    .with_listening_port("127.0.0.1", {}, &server_port)
+    .with_listening_port("127.0.0.1:0", {}, &server_port)
   );
 
   rpc::Completion_queue client_queue;
@@ -76,7 +76,7 @@ TEST(channel, move_channel) {
   rpc::server::Server srv(rpc::server::Config()
     .with_default_listening_queues({sync_srv.queues.begin(), sync_srv.queues.end()})
     .with_service(sync_srv)
-    .with_listening_port("127.0.0.1", {}, &server_port)
+    .with_listening_port("127.0.0.1:0", {}, &server_port)
   );
 
   rpc::Completion_queue client_queue;

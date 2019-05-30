@@ -105,7 +105,7 @@ TEST(binary_protocol, simple_rpc) {
   rpc::server::Server server = rpc::server::Config()
     .with_default_listening_queues({server_queues.begin(), server_queues.end()})
     .with_service(sync_srv.make_config())
-    .with_listening_port("127.0.0.1", {}, &server_port);
+    .with_listening_port("127.0.0.1:0", {}, &server_port);
 
   EXPECT_NE(0, server_port);
 

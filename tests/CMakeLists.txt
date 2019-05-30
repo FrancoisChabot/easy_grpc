@@ -45,10 +45,13 @@ add_executable(easy_grpc_tests
 target_link_libraries(easy_grpc_tests easy_grpc GTest::gtest_main GTest::gtest GTest::gmock protobuf::libprotobuf --coverage)
 target_include_directories(easy_grpc_tests PRIVATE .)
 
+include(ProcessorCount)
+ProcessorCount(PROCESSOR_COUNT)
+
 if(CMAKE_COMPILER_IS_GNUCXX)
   setup_target_for_coverage_lcov(
     NAME test_coverage 
-    EXECUTABLE ctest 
+    EXECUTABLE ctest -j ${PROCESSOR_COUNT}
     DEPENDENCIES easy_grpc_tests)
 endif()
 
