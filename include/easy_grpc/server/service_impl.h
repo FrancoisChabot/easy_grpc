@@ -18,7 +18,7 @@
 #include "easy_grpc/completion_queue.h"
 #include "easy_grpc/error.h"
 #include "easy_grpc/serialize.h"
-#include "easy_grpc/variadic_future.h"
+#include "easy_grpc/third_party/variadic_future.h"
 
 #include <iostream>
 

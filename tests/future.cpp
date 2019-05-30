@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "easy_grpc/variadic_future.h"
+#include "easy_grpc/third_party/variadic_future.h"
 
 #include "gtest/gtest.h"
 
