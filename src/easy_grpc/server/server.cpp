@@ -23,46 +23,6 @@ namespace easy_grpc {
 
 namespace server {
 
-  namespace {
-    class Service_binder : public detail::Method_visitor {
-    public:
-      Service_binder(Server* tgt, const Completion_queue_set& default_queues)
-        : default_queues_(default_queues)
-        , tgt_(tgt) {}
-
-      void visit(detail::Method& info) override {
-        auto handle = grpc_server_register_method(
-          tgt_->handle(), info.name(), nullptr,
-          GRPC_SRM_PAYLOAD_READ_INITIAL_BYTE_BUFFER,
-          0);
-
-          if(!handle) {
-            throw std::runtime_error("failed to register method");
-          }
-
-          Completion_queue_set queues = info.queues();
-          if(queues.empty()) {
-            queues = default_queues_;
-          }
-
-          assert(!queues.empty());
-          ops_.push_back({handle, &info, std::move(queues)});
-      }
-
-      Server* tgt_;
-
-      struct Method_reg_op {
-        void* handle_;
-        detail::Method* method_;
-        Completion_queue_set queues_;
-      };
-
-      const Completion_queue_set& default_queues_;
-      std::vector<Method_reg_op> ops_;
-    };
-  }
-
-
 Server::Server(const Config& cfg) 
   : default_queues_(cfg.default_queues_) { 
 

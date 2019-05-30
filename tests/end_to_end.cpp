@@ -6,6 +6,7 @@
 
 namespace rpc = easy_grpc;
 
+namespace {
 class Test_sync_impl : public tests::TestService {
 public:
   ::rpc::Future<::tests::TestReply> TestMethod(const ::tests::TestRequest& req) override {
@@ -15,6 +16,7 @@ public:
     return {result};
   }
 };
+}
 
 TEST(test_easy_grpc, simple_rpc) {
   rpc::Environment grpc_env;

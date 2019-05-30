@@ -16,7 +16,6 @@
 #include "easy_grpc/config.h"
 
 #include <cassert>
-#include <iostream>
 
 namespace easy_grpc {
 Completion_queue::Completion_queue()
@@ -31,7 +30,7 @@ Completion_queue::~Completion_queue() {
 }
 
 void Completion_queue::worker_main() {
-  EASY_GRPC_TRACE(Completion_queue, start);
+  //EASY_GRPC_TRACE(Completion_queue, start);
 
   while (1) {
     auto event = grpc_completion_queue_next(

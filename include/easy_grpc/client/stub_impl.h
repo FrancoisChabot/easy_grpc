@@ -106,7 +106,6 @@ Future<RepT> start_unary_call(Channel* channel, void* tag, const ReqT& req,
   ops[1].reserved = nullptr;
   ops[1].data.send_message.send_message = buffer;
   
-  
   ops[2].op = GRPC_OP_RECV_INITIAL_METADATA;
   ops[2].flags = 0;
   ops[2].reserved = 0;
@@ -132,7 +131,11 @@ Future<RepT> start_unary_call(Channel* channel, void* tag, const ReqT& req,
       &completion->status_details_;
   ops[5].data.recv_status_on_client.error_string = &completion->error_string_;
 
-  grpc_call_start_batch(call, ops.data(), ops.size(), completion, nullptr);
+  auto status = grpc_call_start_batch(call, ops.data(), ops.size(), completion, nullptr);
+
+  if(status != GRPC_CALL_OK) {
+    delete completion;
+  }
 
   grpc_byte_buffer_destroy(buffer);
 

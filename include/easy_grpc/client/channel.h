@@ -27,6 +27,8 @@ class Completion_queue;
 namespace client {
 class Channel {
  public:
+  Channel() = default;
+
   virtual ~Channel();
 
   void* register_method(const char* name);
@@ -40,8 +42,8 @@ class Channel {
   Channel& operator=(Channel&& rhs);
 
  private:
-  grpc_channel* handle_;
-  Completion_queue* default_queue_;
+  grpc_channel* handle_ = nullptr;
+  Completion_queue* default_queue_  = nullptr;
 
   Channel(const Channel&) = delete;
   Channel& operator=(const Channel&) = delete;

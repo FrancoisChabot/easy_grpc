@@ -28,6 +28,7 @@ Channel::~Channel() {
 Channel::Channel(Channel&& rhs)
     : handle_(rhs.handle_), default_queue_(rhs.default_queue_) {
   rhs.handle_ = nullptr;
+  rhs.default_queue_ = nullptr;
 }
 
 Completion_queue* Channel::default_queue() const { 
@@ -43,6 +44,7 @@ Channel& Channel::operator=(Channel&& rhs) {
   default_queue_ = rhs.default_queue_;
 
   rhs.handle_ = nullptr;
+  rhs.default_queue_ = nullptr;
   return *this;
 }
 

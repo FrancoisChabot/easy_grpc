@@ -21,6 +21,12 @@ namespace easy_grpc {
 namespace client {
 class Unsecure_channel : public Channel {
  public:
+  Unsecure_channel() = default;
+  Unsecure_channel(Unsecure_channel&&) = default;
+  Unsecure_channel& operator=(Unsecure_channel&&) = default;
+  Unsecure_channel(const Unsecure_channel&) = delete;
+  Unsecure_channel& operator=(const Unsecure_channel&) = delete;
+
   Unsecure_channel(const std::string& addr, Completion_queue* default_pool);
 };
 }  // namespace client

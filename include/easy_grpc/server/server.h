@@ -34,11 +34,11 @@ class Service;
 
 class Config {
  public:
+  Config() = default;
+  Config(Config&&) = default;
+  Config& operator=(Config&&) = default;
+  
   Config& with_default_listening_queues(Completion_queue_set);
-
-
-
-
 
   template<typename ServiceT>
   Config& with_service(ServiceT& service) {
@@ -69,9 +69,8 @@ class Config {
 };
 
 class Server {
-  grpc_server* impl_ = nullptr;
-
  public:
+  Server() = default;
   Server(const Config& cfg);
   Server(Server&& rhs);
   Server& operator=(Server&& rhs);
@@ -87,6 +86,7 @@ class Server {
   Server(const Server&) = delete;
   Server& operator=(const Server&) = delete;
 
+  grpc_server* impl_ = nullptr;
   Completion_queue_set default_queues_;
 
   grpc_completion_queue* shutdown_queue_ = nullptr;

@@ -13,6 +13,15 @@ SET(COVERAGE OFF CACHE BOOL "Coverage")
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 if(CMAKE_COMPILER_IS_GNUCXX)
     include(CodeCoverage)
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O0")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O0")
+    set(COVERAGE_LCOV_EXCLUDES 
+      '${PROJECT_SOURCE_DIR}/tests/*' 
+      '${PROJECT_SOURCE_DIR}/examples/*' 
+      '${PROJECT_SOURCE_DIR}/protoc_plugin/*' 
+      '*/third_party/*' 
+      '/usr/*'
+    )
     APPEND_COVERAGE_COMPILER_FLAGS()
 endif()
 
