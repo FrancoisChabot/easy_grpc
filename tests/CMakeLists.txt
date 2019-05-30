@@ -40,12 +40,10 @@ add_executable(easy_grpc_tests
 
 
 
-target_link_libraries(easy_grpc_tests easy_grpc GTest::gtest_main GTest::gtest GTest::gmock protobuf::libprotobuf-lite)
+target_link_libraries(easy_grpc_tests easy_grpc GTest::gtest_main GTest::gtest GTest::gmock protobuf::libprotobuf-lite --coverage)
 target_include_directories(easy_grpc_tests PRIVATE .)
 
-set(COVERAGE_LCOV_EXCLUDES '/usr/*' '8/*') 
-SETUP_TARGET_FOR_COVERAGE_LCOV(NAME easy_grpc_tests_coverage
-                              EXECUTABLE easy_grpc_tests
-                              DEPENDENCIES easy_grpc_tests)
+
+
 
 gtest_discover_tests(easy_grpc_tests)

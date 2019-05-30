@@ -7,13 +7,13 @@ set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
 
-ENABLE_TESTING()
+SET(COVERAGE OFF CACHE BOOL "Coverage")
+
+
+
 include(CTest)
-include(CodeCoverage)
-APPEND_COVERAGE_COMPILER_FLAGS()
 
 add_subdirectory(protoc_plugin)
-
 
 
 add_library(easy_grpc
@@ -27,6 +27,11 @@ add_library(easy_grpc
   src/easy_grpc/environment.cpp
   src/easy_grpc/completion_queue.cpp
 )
+
+if (COVERAGE)
+  target_compile_options(easy_grpc PUBLIC --coverage)
+  target_link_libraries(easy_grpc gcov)
+endif()
 
 target_compile_features(easy_grpc PUBLIC cxx_std_17)
 
