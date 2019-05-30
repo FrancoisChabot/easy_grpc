@@ -24,13 +24,14 @@ jobs:
           name: Test
           command: |
             cd _bld 
-            ctest -T memcheck
+            ctest -j $(nproc) -T memcheck
 
       - run:
           name: Coverage
           command: |
             coveralls --gcov-options '\-lp' --build-root _bld \
               -e examples \
+              -e tests/generated \
               -e protoc_plugin \
               -e _bld/external \
               -e _bld/include \
