@@ -29,9 +29,9 @@ jobs:
       - run:
           name: Coverage
           command: |
-            coveralls --build-root build \
-              -e build/external \
-              -e build/include \
-              -e build/CMakeFiles/3.12.1 \
-              -e build/CMakeFiles/feature_tests.c \
-              -e build/CMakeFiles/feature_tests.cxx
+            coveralls --build-root _bld \
+              -e _bld/external \
+              -e _bld/include \
+              -e _bld/CMakeFiles/3.12.1 \
+              -e _bld/CMakeFiles/feature_tests.c \
+              -e _bld/CMakeFiles/feature_tests.cxx
