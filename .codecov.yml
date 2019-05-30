@@ -1,0 +1,5 @@
+ignore:
+    - examples
+    - tests
+    - protoc_plugin
+    - include/easy_grpc/third_party

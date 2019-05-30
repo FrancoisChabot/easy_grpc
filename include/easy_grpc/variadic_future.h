@@ -89,6 +89,11 @@ void enqueue(Q* q, F&& f) {
 template <typename... ArgsT>
 class Future_handler_iface {
  public:
+ Future_handler_iface() = default;
+  Future_handler_iface(const Future_handler_iface&) = delete;
+  Future_handler_iface(Future_handler_iface&&) = delete;
+  Future_handler_iface& operator=(const Future_handler_iface&) = delete;
+  Future_handler_iface& operator=(Future_handler_iface&&) = delete;
   virtual ~Future_handler_iface() {}
 
   virtual void finish(std::tuple<expected<ArgsT>...>) = 0;
