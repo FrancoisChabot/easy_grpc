@@ -49,7 +49,14 @@ namespace server {
         assert(payload_);
         auto req = deserialize<ReqT>(payload_);
         grpc_byte_buffer_destroy(payload_);
-        Future<RepT> result = handler(req);
+        Future<RepT> result;
+        try {
+          result = handler(req);
+        }
+        catch(...) {
+          result = Future<RepT>(std::current_exception());
+        }
+
         result.then_finally_expect([this](expected<RepT> rep){
           if(rep.has_value()) {
             std::array<grpc_op, 4> ops;

@@ -24,6 +24,13 @@ public:
 };
 
 
+class Junk_throwing_impl : public tests::TestService {
+public:
+  ::rpc::Future<::tests::TestReply> TestMethod(const ::tests::TestRequest& req) override {
+    throw 12;
+  }
+};
+
 class Failure_returning_impl : public tests::TestService {
 public:
   ::rpc::Future<::tests::TestReply> TestMethod(const ::tests::TestRequest& req) override {
@@ -72,6 +79,34 @@ TEST(server, failing_call) {
     .with_service(failing_srv)
     .with_listening_port("127.0.0.1", {}, &server_port);
 
+  rpc::server::Server srv(cfg);
+
+  rpc::client::Unsecure_channel channel(std::string("127.0.0.1:") + std::to_string(server_port), &client_queue);
+  tests::TestService::Stub stub(&channel);
+
+  ::tests::TestRequest req;
+  req.set_name("dude");
+
+  EXPECT_THROW(stub.TestMethod(req).get(), rpc::Rpc_error);
+}
+
+TEST(server, failing_with_junk) {
+  rpc::Environment env;
+  
+  std::array<rpc::Completion_queue, 1> server_queues;
+  rpc::Completion_queue client_queue;
+  
+  Junk_throwing_impl failing_srv;
+
+  auto cfg = rpc::server::Config();
+
+  int server_port = 0;
+  cfg.with_default_listening_queues({server_queues.begin(), server_queues.end()})
+    .with_service(failing_srv)
+    .with_listening_port("127.0.0.1", {}, &server_port);
+
+  rpc::server::Server srv(cfg);
+
   rpc::client::Unsecure_channel channel(std::string("127.0.0.1:") + std::to_string(server_port), &client_queue);
   tests::TestService::Stub stub(&channel);
 
@@ -95,6 +130,8 @@ TEST(server, failing_async_call) {
   cfg.with_default_listening_queues({server_queues.begin(), server_queues.end()})
     .with_service(failing_srv)
     .with_listening_port("127.0.0.1", {}, &server_port);
+
+  rpc::server::Server srv(cfg);
 
   rpc::client::Unsecure_channel channel(std::string("127.0.0.1:") + std::to_string(server_port), &client_queue);
   tests::TestService::Stub stub(&channel);
