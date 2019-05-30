@@ -24,7 +24,7 @@ jobs:
           name: Test
           command: |
             cd _bld 
-            ctest -j $(nproc) -T memcheck
+            ctest -T memcheck
 
       - run:
           name: Coverage
