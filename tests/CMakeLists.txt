@@ -35,13 +35,14 @@ add_executable(easy_grpc_tests
   generated/test.pb.cc
   binary_protocol.cpp
   test_channel.cpp
+  test_error.cpp
   environment.cpp
   end_to_end.cpp
   future.cpp
   server.cpp
 )
 
-target_link_libraries(easy_grpc_tests easy_grpc GTest::gtest_main GTest::gtest GTest::gmock protobuf::libprotobuf-lite --coverage)
+target_link_libraries(easy_grpc_tests easy_grpc GTest::gtest_main GTest::gtest GTest::gmock protobuf::libprotobuf --coverage)
 target_include_directories(easy_grpc_tests PRIVATE .)
 
 if(CMAKE_COMPILER_IS_GNUCXX)
