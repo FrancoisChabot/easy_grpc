@@ -509,12 +509,29 @@ class Future_storage {
   std::mutex mtx;
 };
 
+template<typename... Ts>
+struct Future_value_type {
+  static_assert(sizeof...(Ts) == 0);
+  using type = void;
+};
+
+template<typename FirstT>
+struct Future_value_type<FirstT> {
+  using type = FirstT;
+};
+
+template<typename FirstT, typename SecondT, typename... RestT>
+struct Future_value_type<FirstT, SecondT, RestT...> {
+  using type = std::tuple<FirstT, SecondT, RestT...>;
+};
+
 
 }  // namespace detail
 template <typename... Ts>
 class Future {
  public:
   using storage_type = detail::Future_storage<Ts...>;
+  using value_type = typename detail::Future_value_type<Ts...>::type;
 
   Future() = default;
   Future(std::tuple<Ts...> values) : storage_(std::make_shared<storage_type>()) {

@@ -16,6 +16,7 @@
 #define EASY_GRPC_SERVER_SERVICE_CONFIG_H_INCLUDED
 
 #include "easy_grpc/server/service_impl.h"
+#include "easy_grpc/third_party/function_traits.h"
 
 #include <string>
 
@@ -27,8 +28,14 @@ class Service_config {
 public:
   Service_config(const char * name) : name_(name) {}
 
-  template<typename InT, typename OutT, typename CbT>
+  template<typename CbT>
   void add_method(const char * name, CbT cb, Completion_queue_set queues = {}) {
+//    using cb_traits = function_traits<CbT>;
+
+    using InT = typename function_traits<CbT>::template arg<0>::type;
+    using OutFutT = typename function_traits<CbT>::result_type;
+    using OutT = typename OutFutT::value_type;
+    
     methods_.emplace_back(detail::make_unary_method<InT, OutT>(name, std::move(cb)));
   }
 

@@ -173,7 +173,7 @@ void generate_service_header(const ServiceDescriptor* service,
     auto input = method->input_type();
     auto output = method->output_type();
 
-    dst << "    result.add_method<" << class_name(input) << ", " << class_name(output) << ">("
+    dst << "    result.add_method("
         << method_name_cste(method) << ", [&impl](" << class_name(input) << " req){return impl." << method->name() << "(std::move(req));});\n"; 
   }
 

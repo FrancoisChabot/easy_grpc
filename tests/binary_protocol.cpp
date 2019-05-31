@@ -85,7 +85,7 @@ public:
   rpc::server::Service_config make_config() {
     rpc::server::Service_config blarg_config("test");
 
-    blarg_config.add_method<Request_packet, Reply_packet>("/test.test/DoWork", [this](Request_packet req){return DoWork(std::move(req));});
+    blarg_config.add_method("/test.test/DoWork", [this](Request_packet req){return DoWork(std::move(req));});
 
     return blarg_config;
   }

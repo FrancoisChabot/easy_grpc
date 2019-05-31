@@ -31,8 +31,8 @@ public:
   rpc::server::Service_config make_config() {
     rpc::server::Service_config blarg_config("test.Blarg");
 
-    blarg_config.add_method<Request_packet, Reply_packet>("foo", [this](Request_packet req){return foo(std::move(req));});
-    blarg_config.add_method<Request_packet, Reply_packet>("bar", [this](Request_packet req){return bar(std::move(req));});
+    blarg_config.add_method("foo", [this](Request_packet req){return foo(std::move(req));});
+    blarg_config.add_method("bar", [this](Request_packet req){return bar(std::move(req));});
 
     return blarg_config;
   }
