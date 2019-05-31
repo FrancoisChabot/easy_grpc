@@ -16,9 +16,9 @@
 #define AOM_VARIADIC_FUTURE_INCLUDED_H
 
 // CHANGE THIS IF YOU WANT TO USE SOME OTHER EXPECTED TYPE
-#include "expected_lite.h"
+#include "easy_grpc/third_party/expected_lite.h"
 
-namespace aom {
+namespace easy_grpc {
   template <typename T>
   using expected = nonstd::expected<T, std::exception_ptr>;
   using unexpected = nonstd::unexpected_type<std::exception_ptr>;
@@ -32,7 +32,7 @@ namespace aom {
 #include <mutex>
 #include <optional>
 
-namespace aom {
+namespace easy_grpc {
 
 template <typename... Ts>
 class Future;

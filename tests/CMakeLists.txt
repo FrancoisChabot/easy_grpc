@@ -38,7 +38,6 @@ add_executable(easy_grpc_tests
   test_error.cpp
   environment.cpp
   end_to_end.cpp
-  future.cpp
   server.cpp
 )
 

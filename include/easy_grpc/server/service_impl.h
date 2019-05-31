@@ -20,6 +20,8 @@
 #include "easy_grpc/serialize.h"
 #include "easy_grpc/third_party/variadic_future.h"
 
+#include "easy_grpc/config.h"
+
 #include <iostream>
 
 namespace easy_grpc {
