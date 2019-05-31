@@ -34,7 +34,7 @@ add_library(hello_proto
 )
 
 target_include_directories(hello_proto PUBLIC .)
-target_link_libraries(hello_proto easy_grpc protobuf::libprotobuf)
+target_link_libraries(hello_proto easy_grpc protobuf::libprotobuf grpc.a)
 
 add_executable(hello_server 
   server_main.cpp

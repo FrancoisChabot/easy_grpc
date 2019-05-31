@@ -1,0 +1,5 @@
+find_package(Threads REQUIRED)
+
+get_filename_component(SL_TOOLS_CMAKE_DIR "${CMAKE_CURRENT_LIST_FILE}" PATH)
+
+include("${SL_TOOLS_CMAKE_DIR}/easy_grpcTargets.cmake")

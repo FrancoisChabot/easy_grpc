@@ -12,7 +12,7 @@ jobs:
           command: |
             mkdir _bld 
             cd _bld 
-            cmake -DCMAKE_BUILD_TYPE=Debug -DCOVERAGE=1 ..
+            cmake -DCMAKE_BUILD_TYPE=Debug -DEASY_GRPC_TEST_COVERAGE=ON -DEASY_GRPC_BUILD_TESTS=ON -DEASY_GRPC_BUILD_EXAMPLES=ON ..
 
       - run:
           name: Build

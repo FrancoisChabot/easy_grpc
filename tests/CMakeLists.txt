@@ -3,6 +3,8 @@ find_package(Protobuf REQUIRED)
 include(GoogleTest)
 find_package(GTest REQUIRED CONFIG)
 
+
+
 set(GENERATED_PROTOBUF_PATH ${CMAKE_CURRENT_SOURCE_DIR}/generated)
 file(MAKE_DIRECTORY ${GENERATED_PROTOBUF_PATH})
 
@@ -41,13 +43,13 @@ add_executable(easy_grpc_tests
   server.cpp
 )
 
-target_link_libraries(easy_grpc_tests easy_grpc GTest::gtest_main GTest::gtest GTest::gmock protobuf::libprotobuf --coverage)
+target_link_libraries(easy_grpc_tests easy_grpc GTest::gtest_main GTest::gtest GTest::gmock protobuf::libprotobuf grpc.a)
 target_include_directories(easy_grpc_tests PRIVATE .)
 
 include(ProcessorCount)
 ProcessorCount(PROCESSOR_COUNT)
 
-if(CMAKE_COMPILER_IS_GNUCXX)
+if(EASY_GRPC_TEST_COVERAGE)
   setup_target_for_coverage_lcov(
     NAME test_coverage 
     EXECUTABLE ctest -j ${PROCESSOR_COUNT}
