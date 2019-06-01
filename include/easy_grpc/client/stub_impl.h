@@ -19,6 +19,8 @@
 #include "easy_grpc/error.h"
 #include "easy_grpc/serialize.h"
 #include "easy_grpc/third_party/variadic_future.h"
+#include "easy_grpc/client/channel.h"
+
 #include "grpc/grpc.h"
 #include "grpc/support/alloc.h"
 
