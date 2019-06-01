@@ -17,6 +17,7 @@
 
 #include "easy_grpc/server/service_impl.h"
 #include "easy_grpc/third_party/function_traits.h"
+#include "easy_grpc/third_party/variadic_future.h"
 
 #include <string>
 
@@ -30,13 +31,7 @@ public:
 
   template<typename CbT>
   void add_method(const char * name, CbT cb, Completion_queue_set queues = {}) {
-//    using cb_traits = function_traits<CbT>;
-
-    using InT = typename function_traits<CbT>::template arg<0>::type;
-    using OutFutT = typename function_traits<CbT>::result_type;
-    using OutT = typename OutFutT::value_type;
-    
-    methods_.emplace_back(detail::make_unary_method<InT, OutT>(name, std::move(cb)));
+    methods_.emplace_back(detail::make_unary_method(name, std::move(cb)));
   }
 
   const std::vector<std::unique_ptr<detail::Method>>& methods() const {

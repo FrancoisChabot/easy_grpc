@@ -6,13 +6,15 @@
 namespace rpc = easy_grpc;
 
 namespace {
-class Test_sync_impl : public tests::TestService {
+class Test_sync_impl {
 public:
-  ::rpc::Future<::tests::TestReply> TestMethod(const ::tests::TestRequest& req) override {
+  using service_type = tests::TestService;
+
+  ::tests::TestReply TestMethod(const ::tests::TestRequest& req) {
     ::tests::TestReply result;
     result.set_name(req.name() + "_replied");
 
-    return {result};
+    return result;
   }
 };
 

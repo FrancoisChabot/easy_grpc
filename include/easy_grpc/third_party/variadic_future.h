@@ -37,6 +37,15 @@ namespace easy_grpc {
 template <typename... Ts>
 class Future;
 
+template <typename T>
+struct is_future : public std::false_type {};
+
+template <typename... Ts>
+struct is_future<Future<Ts...>> : public std::true_type {};
+
+template <typename T>
+constexpr bool is_future_v = is_future<T>::value;
+
 namespace detail {
 template <typename... Ts>
 std::tuple<Ts...> extract(expected<Ts>... src) {
@@ -60,14 +69,7 @@ std::optional<std::exception_ptr> get_first_failure(
 template <typename... Ts>
 class Future_storage;
 
-template <typename T>
-struct is_future : public std::false_type {};
 
-template <typename... Ts>
-struct is_future<Future<Ts...>> : public std::true_type {};
-
-template <typename T>
-constexpr bool is_future_v = is_future<T>::value;
 
 // The interface to the fully realized future callback handling.
 
