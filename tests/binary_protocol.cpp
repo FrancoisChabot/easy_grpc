@@ -17,7 +17,7 @@ struct Reply_packet {
 };
 
 namespace easy_grpc {
-template<>
+template <>
 struct Serializer<Request_packet> {
   static grpc_byte_buffer* serialize(const Request_packet& msg) {
     auto slice = grpc_slice_malloc(sizeof(Request_packet));
@@ -41,7 +41,7 @@ struct Serializer<Request_packet> {
   }
 };
 
-template<>
+template <>
 struct Serializer<Reply_packet> {
   static grpc_byte_buffer* serialize(const Reply_packet& msg) {
     auto slice = grpc_slice_malloc(sizeof(Reply_packet));
@@ -64,20 +64,18 @@ struct Serializer<Reply_packet> {
     return result;
   }
 };
-}
+}  // namespace easy_grpc
 
 class Custom_service {
-public:
-
+ public:
   rpc::Future<Reply_packet> DoWork(const Request_packet& req) {
     Reply_packet result = {req.a, req.a * 2, req.a * req.a};
     return {result};
   }
 
   class Stub {
-  public:
-    Stub(rpc::client::Channel* c) 
-      : DoWork("/test.test/DoWork", c) {}
+   public:
+    Stub(rpc::client::Channel* c) : DoWork("/test.test/DoWork", c) {}
 
     rpc::client::Method_stub<Request_packet, Reply_packet> DoWork;
   };
@@ -85,15 +83,15 @@ public:
   rpc::server::Service_config make_config() {
     rpc::server::Service_config blarg_config("test");
 
-    blarg_config.add_method("/test.test/DoWork", [this](Request_packet req){return DoWork(std::move(req));});
+    blarg_config.add_method("/test.test/DoWork", [this](Request_packet req) {
+      return DoWork(std::move(req));
+    });
 
     return blarg_config;
   }
 };
 
-
 TEST(binary_protocol, simple_rpc) {
-  
   rpc::Environment grpc_env;
 
   std::array<rpc::Completion_queue, 1> server_queues;
@@ -102,15 +100,18 @@ TEST(binary_protocol, simple_rpc) {
   Custom_service sync_srv;
 
   int server_port = 0;
-  rpc::server::Server server = rpc::server::Config()
-    .with_default_listening_queues({server_queues.begin(), server_queues.end()})
-    .with_service(sync_srv.make_config())
-    .with_listening_port("127.0.0.1:0", {}, &server_port);
+  rpc::server::Server server =
+      rpc::server::Config()
+          .with_default_listening_queues(
+              {server_queues.begin(), server_queues.end()})
+          .with_service(sync_srv.make_config())
+          .with_listening_port("127.0.0.1:0", {}, &server_port);
 
   EXPECT_NE(0, server_port);
 
   {
-    rpc::client::Unsecure_channel channel(std::string("127.0.0.1:") + std::to_string(server_port), &client_queue);
+    rpc::client::Unsecure_channel channel(
+        std::string("127.0.0.1:") + std::to_string(server_port), &client_queue);
     Custom_service::Stub stub(&channel);
 
     auto result = stub.DoWork({4}).get();
@@ -119,5 +120,4 @@ TEST(binary_protocol, simple_rpc) {
     EXPECT_EQ(result.b, 8);
     EXPECT_EQ(result.c, 16);
   }
-  
 }

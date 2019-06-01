@@ -17,8 +17,8 @@
 
 #include "easy_grpc/completion_queue.h"
 #include "easy_grpc/error.h"
-#include "easy_grpc/third_party/variadic_future.h"
 #include "easy_grpc/serialize.h"
+#include "easy_grpc/third_party/variadic_future.h"
 #include "grpc/grpc.h"
 #include "grpc/support/alloc.h"
 
@@ -45,34 +45,31 @@ class Call_completion final : public Completion_queue::Completion {
     grpc_metadata_array_destroy(&server_metadata_);
     grpc_metadata_array_destroy(&trailing_metadata_);
 
-    if(recv_buffer_) {
+    if (recv_buffer_) {
       grpc_byte_buffer_destroy(recv_buffer_);
     }
 
     grpc_call_unref(call_);
   }
 
-  void fail () {
+  void fail() {
     try {
-        throw error::internal("failed to start call");
-      }
-      catch(...) {
-        rep_.set_exception(std::current_exception());
-      }
+      throw error::internal("failed to start call");
+    } catch (...) {
+      rep_.set_exception(std::current_exception());
+    }
   }
 
   bool exec(bool success) noexcept override {
     if (status_ == GRPC_STATUS_OK) {
       rep_.set_value(deserialize<RepT>(recv_buffer_));
-    }
-    else {
+    } else {
       try {
         auto str = grpc_slice_to_c_string(status_details_);
         auto err = Rpc_error(status_, str);
         gpr_free(str);
         throw err;
-      }
-      catch(...) {
+      } catch (...) {
         rep_.set_exception(std::current_exception());
       }
     }
@@ -100,6 +97,7 @@ Future<RepT> start_unary_call(Channel* channel, void* tag, const ReqT& req,
       channel->handle(), nullptr, GRPC_PROPAGATE_DEFAULTS,
       options.completion_queue->handle(), tag, options.deadline, nullptr);
   auto completion = new detail::Call_completion<RepT>(call);
+  auto buffer = serialize(req);
 
   std::array<grpc_op, 6> ops;
 
@@ -109,12 +107,11 @@ Future<RepT> start_unary_call(Channel* channel, void* tag, const ReqT& req,
   ops[0].data.send_initial_metadata.count = 0;
   ops[0].data.send_initial_metadata.maybe_compression_level.is_set = 0;
 
-  auto buffer = serialize(req);
   ops[1].op = GRPC_OP_SEND_MESSAGE;
   ops[1].flags = 0;
   ops[1].reserved = nullptr;
   ops[1].data.send_message.send_message = buffer;
-  
+
   ops[2].op = GRPC_OP_RECV_INITIAL_METADATA;
   ops[2].flags = 0;
   ops[2].reserved = 0;
@@ -141,9 +138,10 @@ Future<RepT> start_unary_call(Channel* channel, void* tag, const ReqT& req,
   ops[5].data.recv_status_on_client.error_string = &completion->error_string_;
 
   auto result = completion->rep_.get_future();
-  auto status = grpc_call_start_batch(call, ops.data(), ops.size(), completion, nullptr);
+  auto status =
+      grpc_call_start_batch(call, ops.data(), ops.size(), completion, nullptr);
 
-  if(status != GRPC_CALL_OK) {
+  if (status != GRPC_CALL_OK) {
     completion->fail();
     delete completion;
   }

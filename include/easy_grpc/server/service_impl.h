@@ -22,14 +22,14 @@
 namespace easy_grpc {
 
 namespace server {
-  namespace detail {
+namespace detail {
 
-    template<typename CbT>
-    auto make_unary_method(const char* name, CbT cb) {
-      return std::make_unique<Unary_method<CbT>>(name, std::move(cb));
-    }
-  }
+template <typename CbT>
+auto make_unary_method(const char* name, CbT cb) {
+  return std::make_unique<Unary_method<CbT>>(name, std::move(cb));
 }
+}  // namespace detail
+}  // namespace server
 
 }  // namespace easy_grpc
 #endif

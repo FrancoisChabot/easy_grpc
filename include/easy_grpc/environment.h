@@ -41,6 +41,6 @@ class [[nodiscard]] Environment {
 
   static bool is_valid();
 };
-}
+}  // namespace easy_grpc
 
 #endif

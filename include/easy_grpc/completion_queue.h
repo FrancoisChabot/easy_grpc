@@ -45,32 +45,28 @@ class Completion_queue {
 
 // Each server-side method is bound to a set of completion queues.
 class Completion_queue_set {
-public:
+ public:
   Completion_queue_set() = default;
   Completion_queue_set(Completion_queue_set&&) = default;
   Completion_queue_set(const Completion_queue_set&) = default;
   Completion_queue_set& operator=(Completion_queue_set&&) = default;
   Completion_queue_set& operator=(const Completion_queue_set&) = default;
 
-  template<typename IteT>
+  template <typename IteT>
   Completion_queue_set(IteT begin, IteT end) {
     queues_.reserve(std::distance(begin, end));
-    for(; begin != end; ++begin) {
+    for (; begin != end; ++begin) {
       queues_.push_back(std::ref(*begin));
     }
   }
 
-  auto begin() const {
-    return queues_.begin();
-  }
+  auto begin() const { return queues_.begin(); }
 
-  auto end() const {
-    return queues_.end();
-  }
+  auto end() const { return queues_.end(); }
 
-  bool empty() const {return queues_.empty();}
+  bool empty() const { return queues_.empty(); }
 
-private:
+ private:
   std::vector<std::reference_wrapper<Completion_queue>> queues_;
 };
 }  // namespace easy_grpc

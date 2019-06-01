@@ -20,24 +20,25 @@
 namespace easy_grpc {
 namespace server {
 namespace detail {
-  
-    class Method {
-    public:
-      Method(const char* name) : name_(name) {}
-      virtual ~Method() {}
 
-      const char* name() const { return name_;}
+class Method {
+ public:
+  Method(const char* name) : name_(name) {}
+  virtual ~Method() {}
 
-      void set_queues(Completion_queue_set queues) {queues_ = queues;}
-      const Completion_queue_set& queues() const {return queues_;}
+  const char* name() const { return name_; }
 
-      virtual void listen(grpc_server* server, void* registration, grpc_completion_queue* cq) = 0;
+  void set_queues(Completion_queue_set queues) { queues_ = queues; }
+  const Completion_queue_set& queues() const { return queues_; }
 
-    private:
-      Completion_queue_set queues_;
-      const char* name_;
-    };
-}
-}
-}
+  virtual void listen(grpc_server* server, void* registration,
+                      grpc_completion_queue* cq) = 0;
+
+ private:
+  Completion_queue_set queues_;
+  const char* name_;
+};
+}  // namespace detail
+}  // namespace server
+}  // namespace easy_grpc
 #endif

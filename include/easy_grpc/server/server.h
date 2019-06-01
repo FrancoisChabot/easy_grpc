@@ -15,9 +15,9 @@
 #ifndef EASY_GRPC_SERVER_SERVER_H_INCLUDED
 #define EASY_GRPC_SERVER_SERVER_H_INCLUDED
 
+#include "easy_grpc/completion_queue.h"
 #include "easy_grpc/server/credentials.h"
 #include "easy_grpc/server/service_config.h"
-#include "easy_grpc/completion_queue.h"
 
 #include "grpc/grpc.h"
 
@@ -37,10 +37,10 @@ class Config {
   Config() = default;
   Config(Config&&) = default;
   Config& operator=(Config&&) = default;
-  
+
   Config& with_default_listening_queues(Completion_queue_set);
 
-  template<typename ServiceT>
+  template <typename ServiceT>
   Config& with_service(ServiceT& service) {
     using service_type = typename ServiceT::service_type;
 
@@ -48,7 +48,6 @@ class Config {
   }
 
   Config& with_service(Service_config);
-
 
   Config& with_listening_port(std::string addr,
                               std::shared_ptr<Credentials> creds = {},
@@ -76,8 +75,8 @@ class Server {
   Server& operator=(Server&& rhs);
   ~Server();
 
-  grpc_server* handle() {return impl_;}
-  
+  grpc_server* handle() { return impl_; }
+
  private:
   void add_listening_ports_(const Config& cfg);
   void cleanup_();

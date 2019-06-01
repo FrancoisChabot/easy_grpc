@@ -15,8 +15,8 @@
 #ifndef EASY_GRPC_SERVER_SERVICE_H_INCLUDED
 #define EASY_GRPC_SERVER_SERVICE_H_INCLUDED
 
-#include "easy_grpc/server/service_impl.h"
 #include "easy_grpc/completion_queue.h"
+#include "easy_grpc/server/service_impl.h"
 
 #include <string>
 
@@ -30,9 +30,8 @@ class Service {
 
   void set_default_queues(Completion_queue_set queues);
   const Completion_queue_set& default_queues();
-  
-private:
-  
+
+ private:
   Completion_queue_set default_queues_;
   friend class Server;
 };

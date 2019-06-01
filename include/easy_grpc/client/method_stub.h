@@ -26,23 +26,27 @@ namespace easy_grpc {
 
 namespace client {
 
-template<typename InT, typename OutT>
+template <typename InT, typename OutT>
 class Method_stub {
-public:
-  Method_stub(const char * method_name, Channel* channel,Completion_queue* q = nullptr)
-    : channel_(channel)
-    , default_queue_(q?q:channel->default_queue())
-    , tag_(channel->register_method(method_name)) {}
+ public:
+  Method_stub(const char* method_name, Channel* channel,
+              Completion_queue* q = nullptr)
+      : channel_(channel),
+        default_queue_(q ? q : channel->default_queue()),
+        tag_(channel->register_method(method_name)) {}
 
-  Future<OutT> operator()(InT req, Call_options options={}) {
-    if(!options.completion_queue) { options.completion_queue = default_queue_; } ;
-    return start_unary_call<OutT>(channel_, tag_, std::move(req), std::move(options));
+  Future<OutT> operator()(InT req, Call_options options = {}) {
+    if (!options.completion_queue) {
+      options.completion_queue = default_queue_;
+    };
+    return start_unary_call<OutT>(channel_, tag_, std::move(req),
+                                  std::move(options));
   }
 
-private:
+ private:
   Channel* channel_;
   Completion_queue* default_queue_;
-  void * tag_;
+  void* tag_;
 };
 
 }  // namespace client

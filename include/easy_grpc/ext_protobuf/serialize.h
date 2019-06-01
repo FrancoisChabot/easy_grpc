@@ -15,8 +15,8 @@
 #ifndef EASY_GRPC_EXT_PROTOBUF_SERIALIZE_INCLUDED_H
 #define EASY_GRPC_EXT_PROTOBUF_SERIALIZE_INCLUDED_H
 
-#include "easy_grpc/serialize.h"
 #include <google/protobuf/message.h>
+#include "easy_grpc/serialize.h"
 
 namespace easy_grpc {
 
@@ -30,7 +30,6 @@ struct Serializer<
 
     msg.SerializeWithCachedSizesToArray(GRPC_SLICE_START_PTR(slice));
 
-    
     return grpc_raw_byte_buffer_create(&slice, 1);
   }
 

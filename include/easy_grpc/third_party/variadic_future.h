@@ -19,11 +19,10 @@
 #include "easy_grpc/third_party/expected_lite.h"
 
 namespace easy_grpc {
-  template <typename T>
-  using expected = nonstd::expected<T, std::exception_ptr>;
-  using unexpected = nonstd::unexpected_type<std::exception_ptr>;
-}
-
+template <typename T>
+using expected = nonstd::expected<T, std::exception_ptr>;
+using unexpected = nonstd::unexpected_type<std::exception_ptr>;
+}  // namespace easy_grpc
 
 #include <cassert>
 #include <functional>
@@ -69,8 +68,6 @@ std::optional<std::exception_ptr> get_first_failure(
 template <typename... Ts>
 class Future_storage;
 
-
-
 // The interface to the fully realized future callback handling.
 
 class Immediate_queue {};
@@ -99,7 +96,7 @@ void enqueue(Q* q, F&& f) {
 template <typename... ArgsT>
 class Future_handler_iface {
  public:
- Future_handler_iface() = default;
+  Future_handler_iface() = default;
   Future_handler_iface(const Future_handler_iface&) = delete;
   Future_handler_iface(Future_handler_iface&&) = delete;
   Future_handler_iface& operator=(const Future_handler_iface&) = delete;
@@ -273,7 +270,7 @@ class Future_then_expect_handler : public Future_handler_base<QueueT, Ts...> {
         dst->fail(std::current_exception());
       }
     });
-}
+  }
 
   static void do_fullfill(QueueT* q, std::tuple<Ts...> v, dst_type dst,
                           CbT cb) {
@@ -511,22 +508,21 @@ class Future_storage {
   std::mutex mtx;
 };
 
-template<typename... Ts>
+template <typename... Ts>
 struct Future_value_type {
   static_assert(sizeof...(Ts) == 0);
   using type = void;
 };
 
-template<typename FirstT>
+template <typename FirstT>
 struct Future_value_type<FirstT> {
   using type = FirstT;
 };
 
-template<typename FirstT, typename SecondT, typename... RestT>
+template <typename FirstT, typename SecondT, typename... RestT>
 struct Future_value_type<FirstT, SecondT, RestT...> {
   using type = std::tuple<FirstT, SecondT, RestT...>;
 };
-
 
 }  // namespace detail
 template <typename... Ts>
@@ -536,11 +532,13 @@ class Future {
   using value_type = typename detail::Future_value_type<Ts...>::type;
 
   Future() = default;
-  Future(std::tuple<Ts...> values) : storage_(std::make_shared<storage_type>()) {
+  Future(std::tuple<Ts...> values)
+      : storage_(std::make_shared<storage_type>()) {
     storage_->fullfill(std::move(values));
   }
 
-  Future(std::exception_ptr exception) : storage_(std::make_shared<storage_type>()) {
+  Future(std::exception_ptr exception)
+      : storage_(std::make_shared<storage_type>()) {
     storage_->fail(exception);
   }
 
@@ -648,7 +646,7 @@ class Future {
     storage_->template set_handler<handler_t>(&queue, std::move(cb));
   }
 
-  auto get_std_future(std::unique_lock<std::mutex>* mtx=nullptr) {
+  auto get_std_future(std::unique_lock<std::mutex>* mtx = nullptr) {
     static_assert(
         sizeof...(Ts) <= 1,
         "converting multi-futures to std::future is not supported yet.");
@@ -664,9 +662,9 @@ class Future {
               p.set_exception(v.error());
             }
           });
-        if(mtx) {
-          mtx->unlock();
-        }
+      if (mtx) {
+        mtx->unlock();
+      }
       return fut;
     } else if constexpr (sizeof...(Ts) == 1) {
       using T = std::tuple_element_t<0, std::tuple<Ts...>>;
@@ -680,9 +678,9 @@ class Future {
           p.set_exception(v.error());
         }
       });
-      if(mtx) {
-          mtx->unlock();
-        }
+      if (mtx) {
+        mtx->unlock();
+      }
       return fut;
     } else {
       // Not sure... return a std::future<tuple<Ts>>?
@@ -773,7 +771,7 @@ void bind_landing(const std::shared_ptr<LandingT>& l, Future<Front> front,
   });
   bind_landing<id + 1>(l, std::move(futs)...);
 }
- 
+
 }  // namespace detail
 template <typename... Ts>
 Future<Ts...> tie(Future<Ts>... futs) {

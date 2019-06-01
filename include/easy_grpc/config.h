@@ -24,18 +24,17 @@ constexpr bool easy_grpc_validation_enabled = true;
 constexpr bool easy_grpc_tracing_enabled = false;
 }  // namespace easy_grpc
 
-
 // easy_grpc requires an implementation of std::expected<>, as proposed in p0323
 // https://github.com/martinmoene/expected-lite is used by default
 #include "easy_grpc/third_party/expected_lite.h"
 namespace easy_grpc {
 template <typename T>
-  using expected = nonstd::expected<T, std::exception_ptr>;
-  using unexpected = nonstd::unexpected_type<std::exception_ptr>;
+using expected = nonstd::expected<T, std::exception_ptr>;
+using unexpected = nonstd::unexpected_type<std::exception_ptr>;
 }  // namespace easy_grpc
 
-
 #define EASY_GRPC_TRACE(ctx, location)
-//#define EASY_GRPC_TRACE(ctx, location) std::cerr << #ctx << " : " << #location << "\n";
+//#define EASY_GRPC_TRACE(ctx, location) std::cerr << #ctx << " : " << #location
+//<< "\n";
 
 #endif

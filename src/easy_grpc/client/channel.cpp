@@ -31,13 +31,9 @@ Channel::Channel(Channel&& rhs)
   rhs.default_queue_ = nullptr;
 }
 
-Completion_queue* Channel::default_queue() const { 
-  return default_queue_; 
-}
+Completion_queue* Channel::default_queue() const { return default_queue_; }
 
-grpc_channel* Channel::handle() const { 
-  return handle_; 
-}
+grpc_channel* Channel::handle() const { return handle_; }
 
 Channel& Channel::operator=(Channel&& rhs) {
   handle_ = rhs.handle_;

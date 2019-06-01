@@ -16,8 +16,8 @@
 #include "easy_grpc/server/service.h"
 #include "easy_grpc/server/service_impl.h"
 
-#include <set>
 #include <cassert>
+#include <set>
 
 namespace easy_grpc {
 
@@ -30,7 +30,7 @@ Config& Config::with_default_listening_queues(Completion_queue_set queues) {
 
 Config& Config::with_service(Service_config cfg) {
   service_cfgs_.push_back(std::move(cfg));
-  return *this; 
+  return *this;
 }
 
 Config& Config::with_listening_port(std::string addr,

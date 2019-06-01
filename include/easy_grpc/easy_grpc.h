@@ -20,8 +20,8 @@
 #include "easy_grpc/error.h"
 #include "easy_grpc/third_party/variadic_future.h"
 
-#include "easy_grpc/client/unsecure_channel.h"
 #include "easy_grpc/client/method_stub.h"
+#include "easy_grpc/client/unsecure_channel.h"
 
 #include "easy_grpc/server/server.h"
 #include "easy_grpc/server/service.h"

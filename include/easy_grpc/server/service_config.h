@@ -26,18 +26,19 @@ namespace easy_grpc {
 namespace server {
 
 class Service_config {
-public:
-  Service_config(const char * name) : name_(name) {}
+ public:
+  Service_config(const char* name) : name_(name) {}
 
-  template<typename CbT>
-  void add_method(const char * name, CbT cb, Completion_queue_set queues = {}) {
+  template <typename CbT>
+  void add_method(const char* name, CbT cb, Completion_queue_set queues = {}) {
     methods_.emplace_back(detail::make_unary_method(name, std::move(cb)));
   }
 
   const std::vector<std::unique_ptr<detail::Method>>& methods() const {
     return methods_;
   }
-private:
+
+ private:
   const char* name_;
   std::vector<std::unique_ptr<detail::Method>> methods_;
 };

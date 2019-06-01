@@ -43,7 +43,7 @@ class Channel {
 
  private:
   grpc_channel* handle_ = nullptr;
-  Completion_queue* default_queue_  = nullptr;
+  Completion_queue* default_queue_ = nullptr;
 
   Channel(const Channel&) = delete;
   Channel& operator=(const Channel&) = delete;

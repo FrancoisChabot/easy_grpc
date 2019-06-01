@@ -15,13 +15,13 @@
 #include "easy_grpc/server/service.h"
 
 namespace easy_grpc {
-  namespace server {
-    void Service::set_default_queues(Completion_queue_set queues) {
-      default_queues_ = std::move(queues);
-    }
-
-    const Completion_queue_set& Service::default_queues() {
-      return default_queues_;
-    }
-  }
+namespace server {
+void Service::set_default_queues(Completion_queue_set queues) {
+  default_queues_ = std::move(queues);
 }
+
+const Completion_queue_set& Service::default_queues() {
+  return default_queues_;
+}
+}  // namespace server
+}  // namespace easy_grpc

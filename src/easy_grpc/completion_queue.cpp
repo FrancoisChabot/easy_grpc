@@ -30,7 +30,7 @@ Completion_queue::~Completion_queue() {
 }
 
 void Completion_queue::worker_main() {
-  //EASY_GRPC_TRACE(Completion_queue, start);
+  // EASY_GRPC_TRACE(Completion_queue, start);
 
   while (1) {
     auto event = grpc_completion_queue_next(
@@ -40,7 +40,7 @@ void Completion_queue::worker_main() {
 
       static_assert(noexcept(completion->exec(event.success)));
       bool kill = completion->exec(event.success);
-      if(kill) {
+      if (kill) {
         delete completion;
       }
     } else {

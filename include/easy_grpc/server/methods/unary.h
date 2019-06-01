@@ -15,7 +15,6 @@
 #ifndef EASY_GRPC_SERVER_METHOD_UNARY_H_INCLUDED
 #define EASY_GRPC_SERVER_METHOD_UNARY_H_INCLUDED
 
-
 #include "easy_grpc/config.h"
 #include "easy_grpc/server/methods/method.h"
 
@@ -24,90 +23,85 @@
 
 #include <cassert>
 
-
 namespace easy_grpc {
 namespace server {
 namespace detail {
-  
-    template<typename CbT, typename HandlerT>
-    class Unary_call_listener : public Completion_queue::Completion {
-    public:
-      Unary_call_listener(grpc_server* server, void* registration, grpc_completion_queue* cq, CbT cb)
-        : srv_(server)
-        , reg_(registration)
-        , cq_(cq)
-        , cb_(std::move(cb)){
-          
-          // It's really important that inject is not called here. As the object
-          // could end up being deleted before it's fully constructed.
-        }
 
-      ~Unary_call_listener() {
-        if(pending_call_) {
-          delete pending_call_;
-        }
-      }
+template <typename CbT, typename HandlerT>
+class Unary_call_listener : public Completion_queue::Completion {
+ public:
+  Unary_call_listener(grpc_server* server, void* registration,
+                      grpc_completion_queue* cq, CbT cb)
+      : srv_(server), reg_(registration), cq_(cq), cb_(std::move(cb)) {
+    // It's really important that inject is not called here. As the object
+    // could end up being deleted before it's fully constructed.
+  }
 
-      bool exec(bool success) noexcept override {
-        EASY_GRPC_TRACE(Unary_call_listener, exec);
+  ~Unary_call_listener() {
+    if (pending_call_) {
+      delete pending_call_;
+    }
+  }
 
-        if(success) {
-          
-          pending_call_->perform(cb_);
-          pending_call_ = nullptr;
+  bool exec(bool success) noexcept override {
+    EASY_GRPC_TRACE(Unary_call_listener, exec);
 
-          // Listen for a new call.
-          inject();
-          return false; // This object is recycled.
-        }
+    if (success) {
+      pending_call_->perform(cb_);
+      pending_call_ = nullptr;
 
-        return true;
-       }
+      // Listen for a new call.
+      inject();
+      return false;  // This object is recycled.
+    }
 
-      void inject() {
-        EASY_GRPC_TRACE(Unary_call_listener, inject);
-        
-        assert(pending_call_ == nullptr);
+    return true;
+  }
 
-        pending_call_ = new HandlerT;
-        auto status = grpc_server_request_registered_call(
-          srv_, reg_, &pending_call_->call_,
-          &pending_call_->deadline_, &pending_call_->request_metadata_,
-          &pending_call_->payload_, cq_, cq_, this);
-      }
+  void inject() {
+    EASY_GRPC_TRACE(Unary_call_listener, inject);
 
-      CbT cb_;
-      grpc_server* srv_;
-      void* reg_;
-      grpc_completion_queue* cq_;
+    assert(pending_call_ == nullptr);
 
-      HandlerT* pending_call_ = nullptr;
-    };
+    pending_call_ = new HandlerT;
+    auto status = grpc_server_request_registered_call(
+        srv_, reg_, &pending_call_->call_, &pending_call_->deadline_,
+        &pending_call_->request_metadata_, &pending_call_->payload_, cq_, cq_,
+        this);
+  }
 
-    template<typename CbT>
-    class Unary_method : public Method {
-    public:
-      Unary_method(const char * name, CbT cb) : Method(name), cb_(cb) {}
+  CbT cb_;
+  grpc_server* srv_;
+  void* reg_;
+  grpc_completion_queue* cq_;
 
-      void listen(grpc_server* server, void* registration, grpc_completion_queue* cq) override {
-        using InT = typename function_traits<CbT>::template arg<0>::type;
-        using OutT = typename function_traits<CbT>::result_type;
-        
-        using HandlerT = std::conditional_t<
-          is_future_v<OutT>, 
-          Unary_async_call_handler<InT, OutT>,
-          Unary_sync_call_handler<InT, OutT>
-        >;
+  HandlerT* pending_call_ = nullptr;
+};
 
-        auto handler = new Unary_call_listener<CbT, HandlerT>(server, registration, cq, cb_);
-        handler->inject();       
-      }
+template <typename CbT>
+class Unary_method : public Method {
+ public:
+  Unary_method(const char* name, CbT cb) : Method(name), cb_(cb) {}
 
-    private:
-      CbT cb_;
-    };
+  void listen(grpc_server* server, void* registration,
+              grpc_completion_queue* cq) override {
+    using InT = typename function_traits<CbT>::template arg<0>::type;
+    using OutT = typename function_traits<CbT>::result_type;
 
-}
-}
-}
+    using HandlerT = std::conditional_t<is_future_v<OutT>,
+                                        Unary_async_call_handler<InT, OutT>,
+                                        Unary_sync_call_handler<InT, OutT> >;
+
+    auto handler =
+        new Unary_call_listener<CbT, HandlerT>(server, registration, cq, cb_);
+    handler->inject();
+  }
+
+ private:
+  CbT cb_;
+};
+
+}  // namespace detail
+}  // namespace server
+}  // namespace easy_grpc
 #endif
