@@ -89,7 +89,7 @@ Initializing the library and calling a method on a server.
 
 ```cpp
 #include "easy_grpc/easy_grpc.h"
-#include "generated/data.sgrpc.pb.h"
+#include "generated/data.egrpc.pb.h"
 
 namespace rpc = easy_grpc;
 namespace client = rpc::client;
@@ -189,47 +189,6 @@ private:
   pkg::MyService2::Stub_interface* stub_;
 };
 ```
-## Futures
-
-    template<typename Ts...>
-    class Future {
-      // Calls callback with Ts... as arguments the future is ready.
-      // - Errors are propagated to the resulting Future without invoking callback.
-      // - If callback throws, the resulting Future will contain the throw exception
-      // - The returned future will be fullfilled once callback returns successfully
-      // - if callback returns a Future<...>, that future will be handed off to the result Future (i.e. no Future<Future<T>>)
-      [[nodiscard]] Future<N/A | decltype(callback(Ts...))> then(callback);
-
-      // Calls callback with Ts... as arguments the future is ready. 
-      // - callback's return value is ignored.
-      // - if callback throws, it will lead to a std::terminate()
-      void then_finally(callback);
-
-      // Calls callback with expected<Ts>... as arguments
-      // - If callback throws, the resulting Future will contain the throw exception 
-      // - callback will always be invoked, regardless of wether this future is fullfilled or failed. 
-      // - The returned future will be fullfilled once callback returns successfully
-      // - if callback returns a Future<...>, that future will be handed off to the result Future (i.e. no Future<Future<T>>)
-      [[nodiscard]] Future<N/A | decltype(callback(Ts...))> then_expect(callback);
-
-
-      // Calls callback with expected<Ts>... as arguments
-      // - callback's return value is ignored.
-      // - callback will always be invoked, regardless of wether this future is fullfilled or failed. 
-      // - if callback throws, it will lead to a std::terminate()
-      void then_finally_expect(callback);
-    };
-
-### Tieing futures
-
-`tie()` can be used to create a future that completes when all passed futures are done.
-
-    Future<int> a_fut;
-    Future<bool> b_fut;
-
-    auto done = tie(a, b).then([](int a, bool b) {});
-
-
 
 ## Design philosophy
 
