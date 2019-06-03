@@ -31,7 +31,27 @@ class Service_config {
 
   template <typename CbT>
   void add_method(const char* name, CbT cb, Completion_queue_set queues = {}) {
-    methods_.emplace_back(detail::make_unary_method(name, std::move(cb)));
+    using cb_traits = function_traits<CbT>;
+
+    
+    constexpr bool c_streaming = is_server_reader_v<typename cb_traits::template arg<0>::type>;
+    // This is the check we WANT, but it's not that simple...
+    // constexpr bool s_streaming = cb_traits::arity > 1 && is_server_writer_v<typename cb_traits::template arg<1>::type>;
+    constexpr bool s_streaming = cb_traits::arity > 1;
+
+    if constexpr(c_streaming && s_streaming) {
+
+    }
+    else if constexpr(c_streaming) {
+
+    }
+    else if constexpr(s_streaming) {
+
+    }
+    else {
+      methods_.emplace_back(detail::make_unary_method(name, std::move(cb)));
+    }
+
   }
 
   const std::vector<std::unique_ptr<detail::Method>>& methods() const {

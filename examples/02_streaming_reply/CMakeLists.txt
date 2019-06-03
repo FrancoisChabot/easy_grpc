@@ -26,21 +26,21 @@ add_custom_command(
                 MAIN_DEPENDENCY ${CMAKE_CURRENT_SOURCE_DIR}/hello.proto
           )
 
-add_library(hello_proto_00
+add_library(hello_proto_02
   generated/hello.egrpc.pb.cc
   generated/hello.pb.cc
 )
 
-target_include_directories(hello_proto_00 PUBLIC .)
-target_link_libraries(hello_proto_00 easy_grpc protobuf::libprotobuf grpc.a)
+target_include_directories(hello_proto_02 PUBLIC .)
+target_link_libraries(hello_proto_02 easy_grpc protobuf::libprotobuf grpc.a)
 
-add_executable(hello_server_00 
+add_executable(hello_server_02 
   server_main.cpp
 )
 
-add_executable(hello_client_00
+add_executable(hello_client_02 
   client_main.cpp
 )
 
-target_link_libraries(hello_server_00 hello_proto_00)
-target_link_libraries(hello_client_00 hello_proto_00)
+target_link_libraries(hello_server_02 hello_proto_02)
+target_link_libraries(hello_client_02 hello_proto_02)

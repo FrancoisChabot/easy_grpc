@@ -59,8 +59,11 @@ install(TARGETS easy_grpc
 )
 
 if(EASY_GRPC_BUILD_EXAMPLES)
+  find_package(Protobuf REQUIRED)
+
   add_subdirectory(examples/00_hello_rpc)
   add_subdirectory(examples/01_non_protobuf)
+  add_subdirectory(examples/02_streaming_reply)
 endif()
 
 if(EASY_GRPC_BUILD_TESTS)

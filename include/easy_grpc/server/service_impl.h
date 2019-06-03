@@ -29,7 +29,37 @@ auto make_unary_method(const char* name, CbT cb) {
   return std::make_unique<Unary_method<CbT>>(name, std::move(cb));
 }
 }  // namespace detail
+
 }  // namespace server
 
+
+template<typename T>
+struct Server_reader {};
+
+template<typename T>
+struct Server_writer {
+  void add(const T& val) {}
+  void finish() {}
+};
+
+
+template<typename T>
+struct is_server_reader : public std::false_type {};
+
+template<typename T>
+struct is_server_reader<Server_reader<T>> : public std::true_type {};
+
+template<typename T>
+constexpr bool is_server_reader_v = is_server_reader<T>::value;
+
+
+template<typename T>
+struct is_server_writer : public std::false_type {};
+
+template<typename T>
+struct is_server_writer<Server_writer<T>> : public std::true_type {};
+
+template<typename T>
+constexpr bool is_server_writer_v = is_server_writer<T>::value;
 }  // namespace easy_grpc
 #endif

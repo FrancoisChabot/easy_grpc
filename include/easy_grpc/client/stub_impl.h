@@ -28,6 +28,12 @@
 
 namespace easy_grpc {
 
+template<typename T>
+struct Client_reader {};
+
+template<typename T>
+struct Client_writer {};
+
 namespace client {
 struct Call_options {
   Completion_queue* completion_queue = nullptr;
@@ -89,6 +95,7 @@ class Call_completion final : public Completion_queue::Completion {
   const char* error_string_;
 };
 }  // namespace detail
+
 
 template <typename RepT, typename ReqT>
 Future<RepT> start_unary_call(Channel* channel, void* tag, const ReqT& req,
@@ -152,6 +159,15 @@ Future<RepT> start_unary_call(Channel* channel, void* tag, const ReqT& req,
 
   return result;
 }
+
+
+template <typename RepT, typename ReqT>
+Client_reader<RepT> start_client_streaming_call(Channel* channel, void* tag, const ReqT& req,
+                              Call_options options) {
+  return {};
+}
+
 }  // namespace client
+
 }  // namespace easy_grpc
 #endif

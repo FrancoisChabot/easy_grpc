@@ -10,7 +10,7 @@ namespace {
 class Test_sync_impl : public tests::TestService {
  public:
   ::rpc::Future<::tests::TestReply> TestMethod(
-      const ::tests::TestRequest& req) override {
+      ::tests::TestRequest req) override {
     ::tests::TestReply result;
     result.set_name(req.name() + "_replied");
 

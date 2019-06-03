@@ -9,6 +9,7 @@
 
 using google::protobuf::Descriptor;
 using google::protobuf::FileDescriptor;
+using google::protobuf::MethodDescriptor;
 using google::protobuf::ServiceDescriptor;
 
 using google::protobuf::compiler::CodeGenerator;
@@ -22,6 +23,32 @@ const char* header_extension = ".egrpc.pb.h";
 const char* source_extension = ".egrpc.pb.cc";
 const char* pb_header_extension = ".pb.h";
 
+enum class Method_mode {
+  UNARY,
+  CLIENT_STREAM,
+  SERVER_STREAM,
+  BIDIR_STREAM
+};
+
+Method_mode get_mode(const MethodDescriptor* method) {
+  bool c_stream = method->client_streaming();
+  bool s_stream = method->server_streaming();
+  if(c_stream && s_stream) {
+    return Method_mode::BIDIR_STREAM;
+  }
+
+  if(c_stream) {
+    return Method_mode::CLIENT_STREAM;
+  }
+
+  if(s_stream) {
+    return Method_mode::SERVER_STREAM;
+  }
+
+  return Method_mode::UNARY;
+}
+
+// Obtain the fully-qualified type name for a given descriptor. 
 std::string class_name(const Descriptor* desc) {
   auto outer = desc;
   while (outer->containing_type()) {
@@ -111,14 +138,29 @@ void generate_service_header(const ServiceDescriptor* service,
   }
   dst << "\n";
 
+  // Print out the compile-time helper functions
   for (int i = 0; i < service->method_count(); ++i) {
     auto method = service->method(i);
 
     auto input = method->input_type();
     auto output = method->output_type();
 
-    dst << "  virtual ::easy_grpc::Future<" << class_name(output) << "> "
-        << method->name() << "(const " << class_name(input) << "&) = 0;\n";
+    switch(get_mode(method)) {
+      case Method_mode::UNARY:
+        dst << "  virtual ::easy_grpc::Future<" << class_name(output) << "> "
+            << method->name() << "(" << class_name(input) << ") = 0;\n";
+        break;
+      case Method_mode::CLIENT_STREAM:
+        dst << "  virtual ::easy_grpc::Future<" << class_name(output) << "> "
+            << method->name() << "(::easy_grpc::Server_reader<" << class_name(input) << ">) = 0;\n";
+        break;
+      case Method_mode::SERVER_STREAM:
+        dst << "  virtual void " << method->name() << "(" << class_name(input) << ", ::easy_grpc::Server_writer<" << class_name(output) << ">) = 0;\n";
+        break;
+      case Method_mode::BIDIR_STREAM:
+        dst << "  virtual void " << method->name() << "(::easy_grpc::Server_reader<" << class_name(input) << ">, ::easy_grpc::Server_writer<" << class_name(output) << ">) = 0;\n";
+        break;
+    }
   }
   dst << "\n";
 
@@ -132,9 +174,28 @@ void generate_service_header(const ServiceDescriptor* service,
     auto input = method->input_type();
     auto output = method->output_type();
 
-    dst << "    virtual ::easy_grpc::Future<" << class_name(output) << "> "
-        << method->name() << "(" << class_name(input)
-        << ", ::easy_grpc::client::Call_options={}) = 0;\n";
+    switch(get_mode(method)) {
+      case Method_mode::UNARY:
+        dst << "    virtual ::easy_grpc::Future<" << class_name(output) << "> "
+          << method->name() << "(" << class_name(input)
+          << ", ::easy_grpc::client::Call_options={}) = 0;\n";
+        break;
+      case Method_mode::CLIENT_STREAM:
+        dst << "    virtual ::easy_grpc::Future<" << class_name(output) << "> "
+          << method->name() << "(::easy_grpc::Client_writer<" << class_name(input)
+          << ">, ::easy_grpc::client::Call_options={}) = 0;\n";
+        break;
+      case Method_mode::SERVER_STREAM:
+        dst << "    virtual ::easy_grpc::Client_reader<" << class_name(output) << "> "
+          << method->name() << "(" << class_name(input)
+          << ", ::easy_grpc::client::Call_options={}) = 0;\n";
+        break;
+      case Method_mode::BIDIR_STREAM:
+        dst << "    virtual ::easy_grpc::Client_reader<" << class_name(output) << "> "
+          << method->name() << "(::easy_grpc::Client_writer<" << class_name(input)
+          << ">, ::easy_grpc::client::Call_options={}) = 0;\n";
+        break;
+    }
   }
 
   dst << "  };\n\n";
@@ -149,9 +210,28 @@ void generate_service_header(const ServiceDescriptor* service,
     auto input = method->input_type();
     auto output = method->output_type();
 
-    dst << "    ::easy_grpc::Future<" << class_name(output) << "> "
-        << method->name() << "(" << class_name(input)
-        << ", ::easy_grpc::client::Call_options={}) override;\n";
+    switch(get_mode(method)) {
+      case Method_mode::UNARY:
+        dst << "    ::easy_grpc::Future<" << class_name(output) << "> "
+          << method->name() << "(" << class_name(input)
+          << ", ::easy_grpc::client::Call_options={}) override;\n";
+        break;
+      case Method_mode::CLIENT_STREAM:
+        dst << "    ::easy_grpc::Future<" << class_name(output) << "> "
+          << method->name() << "(::easy_grpc::Client_writer<" << class_name(input)
+          << ">, ::easy_grpc::client::Call_options={}) override;\n";
+        break;
+      case Method_mode::SERVER_STREAM:
+        dst << "    ::easy_grpc::Client_reader<" << class_name(output) << "> "
+          << method->name() << "(" << class_name(input)
+          << ", ::easy_grpc::client::Call_options={}) override;\n";
+        break;
+      case Method_mode::BIDIR_STREAM:
+        dst << "    ::easy_grpc::Client_reader<" << class_name(output) << "> "
+          << method->name() << "(::easy_grpc::Client_writer<" << class_name(input)
+          << ">, ::easy_grpc::client::Call_options={}) override;\n";
+        break;
+    }
   }
 
   dst << "\n"
@@ -173,8 +253,25 @@ void generate_service_header(const ServiceDescriptor* service,
     auto input = method->input_type();
     auto output = method->output_type();
 
-    dst << "    result.add_method("
+    switch(get_mode(method)) {
+    case Method_mode::UNARY:
+      dst << "    result.add_method("
         << method_name_cste(method) << ", [&impl](" << class_name(input) << " req){return impl." << method->name() << "(std::move(req));});\n"; 
+      break;
+    case Method_mode::CLIENT_STREAM:
+      dst << "    result.add_method("
+        << method_name_cste(method) << ", [&impl](::easy_grpc::Server_reader<" << class_name(input) << "> req){return impl." << method->name() << "(std::move(req));});\n"; 
+      break;
+    case Method_mode::SERVER_STREAM:
+      dst << "    result.add_method("
+        << method_name_cste(method) << ", [&impl](" << class_name(input) << " req, ::easy_grpc::Server_writer<"<<class_name(output) <<"> rep){impl." << method->name() << "(std::move(req), std::move(rep));});\n"; 
+      break;
+    case Method_mode::BIDIR_STREAM:
+      dst << "    result.add_method("
+        << method_name_cste(method) << ", [&impl](::easy_grpc::Server_reader<" << class_name(input) << "> req, ::easy_grpc::Server_writer"<<class_name(output) <<" rep){impl." << method->name() << "(std::move(req), std::move(rep));});\n"; 
+      break;
+    }
+
   }
 
   dst << "\n    return result;\n";
@@ -220,7 +317,9 @@ void generate_service_source(const ServiceDescriptor* service,
     auto output = method->output_type();
 
     dst << "// " << method->name() << "\n";
-    dst << "::easy_grpc::Future<" << class_name(output) << "> " << name
+   switch(get_mode(method)) {
+    case Method_mode::UNARY:
+      dst << "::easy_grpc::Future<" << class_name(output) << "> " << name
         << "::Stub::" << method->name() << "(" << class_name(input)
         << " req, ::easy_grpc::client::Call_options options) {\n"
         << "  if(!options.completion_queue) { options.completion_queue = "
@@ -229,6 +328,44 @@ void generate_service_source(const ServiceDescriptor* service,
         << class_name(output) << ">(channel_, " << method->name()
         << "_tag_, std::move(req), std::move(options));\n"
         << "};\n\n";
+      break;
+    case Method_mode::CLIENT_STREAM:
+      dst << "::easy_grpc::Future<" << class_name(output) << "> " << name
+        << "::Stub::" << method->name() << "(::easy_grpc::Client_writer<" << class_name(input)
+        << "> req, ::easy_grpc::client::Call_options options) {\n"
+        << "  if(!options.completion_queue) { options.completion_queue = "
+           "default_queue_; }\n"
+        << "  return ::easy_grpc::client::start_unary_call<"
+        << class_name(output) << ">(channel_, " << method->name()
+        << "_tag_, std::move(req), std::move(options));\n"
+        << "};\n\n";
+      break;
+    case Method_mode::SERVER_STREAM:
+      dst << "::easy_grpc::Client_reader<" << class_name(output) << "> " << name
+        << "::Stub::" << method->name() << "(" << class_name(input)
+        << " req, ::easy_grpc::client::Call_options options) {\n"
+        << "  if(!options.completion_queue) { options.completion_queue = "
+           "default_queue_; }\n"
+        << "  return ::easy_grpc::client::start_client_streaming_call<"
+        << class_name(output) << ">(channel_, " << method->name()
+        << "_tag_, std::move(req), std::move(options));\n"
+        << "};\n\n";
+      break;
+    case Method_mode::BIDIR_STREAM:
+      dst << "::easy_grpc::Client_reader<" << class_name(output) << "> " << name
+        << "::Stub::" << method->name() << "(::easy_grpc::Client_writer<" << class_name(input)
+        << "> req, ::easy_grpc::client::Call_options options) {\n"
+        << "  if(!options.completion_queue) { options.completion_queue = "
+           "default_queue_; }\n"
+        << "  return ::easy_grpc::client::start_client_streaming_call<"
+        << class_name(output) << ">(channel_, " << method->name()
+        << "_tag_, std::move(req), std::move(options));\n"
+        << "};\n\n";
+      break;
+    }
+    
+    
+
   }
 
 }

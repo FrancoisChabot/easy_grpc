@@ -10,7 +10,7 @@ class Test_sync_impl {
  public:
   using service_type = tests::TestService;
 
-  ::tests::TestReply TestMethod(const ::tests::TestRequest& req) {
+  ::tests::TestReply TestMethod(::tests::TestRequest req) {
     ::tests::TestReply result;
     result.set_name(req.name() + "_replied");
 
@@ -21,7 +21,7 @@ class Test_sync_impl {
 class Failing_impl : public tests::TestService {
  public:
   ::rpc::Future<::tests::TestReply> TestMethod(
-      const ::tests::TestRequest& req) override {
+      ::tests::TestRequest req) override {
     throw rpc::error::unimplemented("not done");
   }
 };
@@ -29,7 +29,7 @@ class Failing_impl : public tests::TestService {
 class Junk_throwing_impl : public tests::TestService {
  public:
   ::rpc::Future<::tests::TestReply> TestMethod(
-      const ::tests::TestRequest& req) override {
+      ::tests::TestRequest req) override {
     throw 12;
   }
 };
@@ -37,7 +37,7 @@ class Junk_throwing_impl : public tests::TestService {
 class Failure_returning_impl : public tests::TestService {
  public:
   ::rpc::Future<::tests::TestReply> TestMethod(
-      const ::tests::TestRequest& req) override {
+      ::tests::TestRequest req) override {
     rpc::Promise<::tests::TestReply> prom;
     auto result = prom.get_future();
     try {
