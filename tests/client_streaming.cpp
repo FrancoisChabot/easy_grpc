@@ -12,7 +12,7 @@ class Test_async_impl {
 
   ::easy_grpc::Future<::tests::TestReply> TestMethod(::easy_grpc::Server_reader<::tests::TestRequest> reader) {
     std::shared_ptr<int> count = std::make_shared<int>(0);
-    return reader.for_each([count](::tests::TestRequest req) mutable {
+    return reader.for_each([count](::tests::TestRequest) mutable {
         *count += 1;
       }).then([count]() {
         ::tests::TestReply reply;

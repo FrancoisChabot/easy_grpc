@@ -30,9 +30,8 @@ class Service_config {
   Service_config(const char* name) : name_(name) {}
 
   template <typename CbT>
-  void add_method(const char* name, CbT cb, Completion_queue_set queues = {}) {
+  void add_method(const char* name, CbT cb, Completion_queue_set={}) {
     using cb_traits = function_traits<CbT>;
-
     
     constexpr bool c_streaming = is_server_reader_v<typename cb_traits::template arg<0>::type>;
     // This is the check we WANT, but it's not that simple...

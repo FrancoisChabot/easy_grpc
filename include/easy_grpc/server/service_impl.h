@@ -52,12 +52,12 @@ template<typename T>
 struct Server_writer {
   using value_type = T;
 
-  void push(const T& val) {}
+  void push(const T& ) {}
 
   void finish() {}
 
   template<typename ErrT>
-  void fail(ErrT&& error);
+  void fail(ErrT&&);
 };
 
 

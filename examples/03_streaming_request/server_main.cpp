@@ -13,7 +13,7 @@ using pkg::HelloReply;
 
 class Hello_impl {
 public:
-  ::easy_grpc::Future<::pkg::HelloReply> SpamedHello(::easy_grpc::Server_reader<::pkg::HelloRequest> req) {
+  ::easy_grpc::Future<::pkg::HelloReply> SpamedHello(::easy_grpc::Server_reader<::pkg::HelloRequest>) {
     ::pkg::HelloReply rep;
     return {rep};
   }

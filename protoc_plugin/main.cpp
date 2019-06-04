@@ -325,7 +325,7 @@ void generate_service_source(const ServiceDescriptor* service,
         << "  return ::easy_grpc::client::start_unary_call<"
         << class_name(output) << ">(channel_, " << method->name()
         << "_tag_, std::move(req), std::move(options));\n"
-        << "};\n\n";
+        << "}\n\n";
       break;
     case Method_mode::CLIENT_STREAM:
       dst << "std::tuple<::easy_grpc::Client_writer<"<< class_name(input)<<">, ::easy_grpc::Future<" << class_name(output) << ">> "
@@ -336,7 +336,7 @@ void generate_service_source(const ServiceDescriptor* service,
           << "  return ::easy_grpc::client::start_client_streaming_call<" << class_name(output) << ", " 
           << class_name(input) << ">(channel_, " << method->name()
           << "_tag_, std::move(options));\n"
-          << "};\n\n";
+          << "}\n\n";
       break;
     case Method_mode::SERVER_STREAM:
       dst << "::easy_grpc::Client_reader<" << class_name(output) << "> " << name
@@ -347,7 +347,7 @@ void generate_service_source(const ServiceDescriptor* service,
         << "  return ::easy_grpc::client::start_server_streaming_call<"
         << class_name(output) << ">(channel_, " << method->name()
         << "_tag_, std::move(req), std::move(options));\n"
-        << "};\n\n";
+        << "}\n\n";
       break;
     case Method_mode::BIDIR_STREAM:
       dst << "::easy_grpc::Client_reader<" << class_name(output) << "> " << name
@@ -358,7 +358,7 @@ void generate_service_source(const ServiceDescriptor* service,
         << "  return ::easy_grpc::client::start_bidir_streaming_call<"
         << class_name(output) << ">(channel_, " << method->name()
         << "_tag_, std::move(req), std::move(options));\n"
-        << "};\n\n";
+        << "}\n\n";
       break;
     }
   }

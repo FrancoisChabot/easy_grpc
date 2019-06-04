@@ -37,7 +37,7 @@ class Unary_call_handler : public Completion_queue::Completion {
     grpc_metadata_array_init(&server_metadata_);
   }
 
-  bool exec(bool success) noexcept override {
+  bool exec(bool) noexcept override {
     grpc_metadata_array_destroy(&request_metadata_);
     grpc_metadata_array_destroy(&server_metadata_);
 

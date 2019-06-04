@@ -35,6 +35,12 @@ add_library(easy_grpc
   src/easy_grpc/completion_queue.cpp
 )
 
+if(MSVC)
+  target_compile_options(easy_grpc PUBLIC /W4 /WX)
+else()
+  target_compile_options(easy_grpc PUBLIC -Wall -Wextra -pedantic -Werror)
+endif()
+
 if (COVERAGE)
   target_compile_options(easy_grpc PUBLIC --coverage)
   target_link_libraries(easy_grpc gcov)

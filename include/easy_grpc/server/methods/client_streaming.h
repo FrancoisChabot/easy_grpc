@@ -83,7 +83,6 @@ public:
 
       assert(visitor_);
 
-
       std::array<grpc_op, 2> ops;
       ops[0].op = GRPC_OP_SEND_INITIAL_METADATA;
       ops[0].flags = 0;
@@ -100,16 +99,10 @@ public:
       auto call_status =
           grpc_call_start_batch(call_, ops.data(), ops.size(), static_cast<Completion_queue::Completion*>(this), nullptr);
 
-
       if (call_status != GRPC_CALL_OK) {
         std::cerr << grpc_call_error_to_string(call_status) << "\n";
         assert(false);  // TODO: HANDLE THIS
       }
-
-      // TODO: read the incoming messages...
-      //reply_fut.then_finally_expect([this](expected<value_type> rep) { 
-      //    this->finish(std::move(rep)); 
-    //  });
   }
 
   //TODO: this is the same as the unary call, remove code duplication.
@@ -185,7 +178,7 @@ public:
     }
   }
 
-  bool exec(bool success) noexcept override {
+  bool exec(bool) noexcept override {
     bool all_done = finishing;
 
     if(!all_done) {
@@ -279,12 +272,14 @@ class Client_streaming_call_listener : public Completion_queue::Completion {
         srv_, reg_, &pending_call_->call_, &pending_call_->deadline_,
         &pending_call_->request_metadata_, nullptr, cq_, cq_,
         this);
+
+    assert(status == GRPC_CALL_OK);
   }
 
-  CbT cb_;
   grpc_server* srv_;
   void* reg_;
   grpc_completion_queue* cq_;
+  CbT cb_;
 
   handler_type* pending_call_ = nullptr;
 };

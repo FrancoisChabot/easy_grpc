@@ -105,7 +105,7 @@ class Unary_call_completion final : public Completion_queue::Completion {
     }
   }
 
-  bool exec(bool success) noexcept override {
+  bool exec(bool) noexcept override {
     if (status_ == GRPC_STATUS_OK) {
       rep_.set_value(deserialize<RepT>(recv_buffer_));
     } else {
@@ -200,7 +200,7 @@ Future<RepT> start_unary_call(Channel* channel, void* tag, const ReqT& req,
 //*********************************************************************************//
 
 template <typename RepT, typename ReqT>
-Client_reader<RepT> start_server_streaming_call(Channel* channel, void* tag, const ReqT& req, Call_options options) {
+Client_reader<RepT> start_server_streaming_call(Channel*, void*, const ReqT&, Call_options) {
   return {};
 }
 
@@ -332,7 +332,7 @@ public:
     }
   }
 
-  bool exec(bool success) noexcept override {
+  bool exec(bool) noexcept override {
     std::lock_guard l(mtx_);
     batch_in_flight_ = false;
 

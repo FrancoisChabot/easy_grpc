@@ -31,7 +31,7 @@ template <typename ReqT, typename RepT>
 class Server_streaming_call_handler {
 public:
   template<typename CbT>
-  void perform(const CbT& cb) {
+  void perform(const CbT&) {
   
   }
 
@@ -91,12 +91,15 @@ class Server_streaming_call_listener : public Completion_queue::Completion {
         srv_, reg_, &pending_call_->call_, &pending_call_->deadline_,
         &pending_call_->request_metadata_, nullptr, cq_, cq_,
         this);
+
+    assert(status == GRPC_CALL_OK);
   }
 
-  CbT cb_;
+  
   grpc_server* srv_;
   void* reg_;
   grpc_completion_queue* cq_;
+  CbT cb_;
 
   handler_type* pending_call_ = nullptr;
 };

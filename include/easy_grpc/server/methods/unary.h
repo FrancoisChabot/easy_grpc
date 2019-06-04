@@ -68,12 +68,16 @@ class Unary_call_listener : public Completion_queue::Completion {
         srv_, reg_, &pending_call_->call_, &pending_call_->deadline_,
         &pending_call_->request_metadata_, &pending_call_->payload_, cq_, cq_,
         this);
+
+    assert(status == GRPC_CALL_OK);
   }
 
-  CbT cb_;
+
   grpc_server* srv_;
   void* reg_;
   grpc_completion_queue* cq_;
+  CbT cb_;
+
 
   HandlerT* pending_call_ = nullptr;
 };

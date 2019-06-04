@@ -176,6 +176,7 @@ class Future_then_handler : public Future_handler_base<QueueT, Ts...> {
   static void do_finish(QueueT* q, std::tuple<expected<Ts>...> v, dst_type dst,
                         CbT cb) {
     if constexpr (sizeof...(Ts) == 0) {
+      (void)v;
       // Finishing a void future is the same as fullfilling it
       do_fullfill(q, std::tuple<>{}, std::move(dst), std::move(cb));
     }
@@ -381,29 +382,33 @@ class Future_then_finally_expect_handler
     do_fail(this->get_queue(), e, std::move(cb_));
   }
 
-  static void do_finish(QueueT* q, std::tuple<expected<Ts>...> value, CbT cb) {
+  static void do_finish(QueueT* q, std::tuple<expected<Ts>...> v, CbT cb) {
     if constexpr (sizeof...(Ts) == 0) {
       // special case, we are expecting an expected<void> here...
-      cb(std::get<0>(value));
+      enqueue(q, [cb = std::move(cb), v = std::move(v)](){cb(std::get<0>(v));});
 
     } else {
-      std::apply(cb, std::move(value));
+      enqueue(q, [cb = std::move(cb), v = std::move(v)]() mutable {
+        std::apply(cb, std::move(v));
+      });
     }
   }
 
   static void do_fullfill(QueueT* q, std::tuple<Ts...> value, CbT cb) {
     if constexpr (sizeof...(Ts) == 0) {
       // special case, we are expecting an expected<void> here...
-      cb({});
+      enqueue(q, [cb = std::move(cb)]{cb({});});
     } else {
+      (void)q;
       std::apply(cb, std::move(value));
+      //enqueue(q, [cb = std::move(cb), v = std::move(value)](){std::apply(cb, std::move(v));});
     }
   }
 
   static void do_fail(QueueT* q, std::exception_ptr e, CbT cb) {
     static_assert(sizeof...(Ts) < 2);
 
-    cb(unexpected{e});
+    enqueue(q, [cb = std::move(cb), e = std::move(e)]() mutable { cb(unexpected{e});});
   }
 };
 
@@ -785,7 +790,6 @@ template <typename... Ts>
 Future<Ts...> tie(Future<Ts>... futs) {
   static_assert(sizeof...(Ts) >= 2, "Trying to tie less than two futures?");
 
-  using result_type = Future<Ts...>;
   using landing_type = detail::Landing<Ts...>;
 
   auto landing = std::make_shared<landing_type>();
