@@ -71,9 +71,9 @@ The Dockerfile contained in this project contains an image that should have ever
 - [x] Client Unary-Unary calls
 - [x] Server Unary-Unary handling
 - [ ] Client Unary-stream calls
-- [ ] Client Stream-Unary calls
+- [x] Client Stream-Unary calls
 - [ ] Client Stream-Stream calls
-- [ ] Server Unary-stream handling
+- [x] Server Unary-stream handling
 - [ ] Server Stream-Unary handling
 - [ ] Server Stream-Stream handling
 
