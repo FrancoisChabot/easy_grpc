@@ -36,6 +36,7 @@ add_executable(easy_grpc_tests
   generated/test.egrpc.pb.cc
   generated/test.pb.cc
   binary_protocol.cpp
+  client_streaming.cpp
   test_channel.cpp
   test_error.cpp
   environment.cpp

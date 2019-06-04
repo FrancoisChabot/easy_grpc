@@ -43,10 +43,10 @@ class Service_config {
 
     }
     else if constexpr(c_streaming) {
-
+      methods_.emplace_back(detail::make_client_streaming_method(name, std::move(cb)));
     }
     else if constexpr(s_streaming) {
-
+      methods_.emplace_back(detail::make_server_streaming_method(name, std::move(cb)));
     }
     else {
       methods_.emplace_back(detail::make_unary_method(name, std::move(cb)));

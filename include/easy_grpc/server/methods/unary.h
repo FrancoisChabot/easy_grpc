@@ -97,6 +97,10 @@ class Unary_method : public Method {
     handler->inject();
   }
 
+  bool immediate_payload_read() const override {
+    return true;
+  }
+
  private:
   CbT cb_;
 };

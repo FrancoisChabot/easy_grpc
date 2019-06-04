@@ -15,6 +15,8 @@
 #ifndef EASY_GRPC_SERVER_SERVICE_IMPL_INCLUDED_H
 #define EASY_GRPC_SERVER_SERVICE_IMPL_INCLUDED_H
 
+#include "easy_grpc/server/methods/server_streaming.h"
+#include "easy_grpc/server/methods/client_streaming.h"
 #include "easy_grpc/server/methods/unary.h"
 
 #include <iostream>
@@ -28,18 +30,34 @@ template <typename CbT>
 auto make_unary_method(const char* name, CbT cb) {
   return std::make_unique<Unary_method<CbT>>(name, std::move(cb));
 }
+
+template <typename CbT>
+auto make_server_streaming_method(const char* name, CbT cb) {
+  return std::make_unique<Server_streaming_method<CbT>>(name, std::move(cb));
+}
+
+template <typename CbT>
+auto make_client_streaming_method(const char* name, CbT cb) {
+  return std::make_unique<Client_streaming_method<CbT>>(name, std::move(cb));
+}
+
+
 }  // namespace detail
 
 }  // namespace server
 
 
-template<typename T>
-struct Server_reader {};
 
 template<typename T>
 struct Server_writer {
-  void add(const T& val) {}
+  using value_type = T;
+
+  void push(const T& val) {}
+
   void finish() {}
+
+  template<typename ErrT>
+  void fail(ErrT&& error);
 };
 
 

@@ -8,9 +8,13 @@ message TestRequest {
 
 message TestReply {
   string name = 1;
+  int32 count = 2;
 }
 
 service TestService {
   rpc TestMethod(TestRequest) returns (TestReply) {}
 }
 
+service TestClientStreamingService {
+  rpc TestMethod(stream TestRequest) returns (TestReply) {}
+}

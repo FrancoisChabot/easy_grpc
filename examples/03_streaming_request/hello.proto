@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+package pkg;
+
+message HelloRequest {
+  string name = 1;
+}
+
+message HelloReply {
+  string greeting = 1;
+}
+
+service HelloService {
+  rpc SpamedHello(stream HelloRequest) returns (HelloReply) {}
+}
+

@@ -30,6 +30,7 @@ using unexpected = nonstd::unexpected_type<std::exception_ptr>;
 #include <memory>
 #include <mutex>
 #include <optional>
+#include <iostream>
 
 namespace easy_grpc {
 
@@ -174,15 +175,22 @@ class Future_then_handler : public Future_handler_base<QueueT, Ts...> {
 
   static void do_finish(QueueT* q, std::tuple<expected<Ts>...> v, dst_type dst,
                         CbT cb) {
-    auto failure = get_first_failure<0>(v);
-    if (!failure) {
-      auto extracted = std::apply(extract<Ts...>, std::move(v));
-      do_fullfill(q, std::move(extracted), std::move(dst), std::move(cb));
-    } else {
-      std::exception_ptr e = *failure;
-      enqueue(q, [cb = std::move(cb), dst = std::move(dst), e,
-                  v = std::move(v)] { dst->fail(e); });
+    if constexpr (sizeof...(Ts) == 0) {
+      // Finishing a void future is the same as fullfilling it
+      do_fullfill(q, std::tuple<>{}, std::move(dst), std::move(cb));
     }
+    else {
+      auto failure = get_first_failure<0>(v);
+      if (!failure) {
+        auto extracted = std::apply(extract<Ts...>, std::move(v));
+        do_fullfill(q, std::move(extracted), std::move(dst), std::move(cb));
+      } else {
+        std::exception_ptr e = *failure;
+        enqueue(q, [cb = std::move(cb), dst = std::move(dst), e,
+                    v = std::move(v)] { dst->fail(e); });
+      }
+    }
+
   }
 
   static void do_fullfill(QueueT* q, std::tuple<Ts...> v, dst_type dst,

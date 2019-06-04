@@ -8,8 +8,8 @@ add_custom_command(
                 COMMAND ${Protobuf_PROTOC_EXECUTABLE}
                 ARGS 
                 "--proto_path=${CMAKE_CURRENT_SOURCE_DIR}"
-                "--egrpc_out=${GENERATED_PROTOBUF_PATH}"
-                "--plugin=protoc-gen-egrpc=$<TARGET_FILE:easy_grpc_protoc_plugin>"
+                "--sgrpc_out=${GENERATED_PROTOBUF_PATH}"
+                "--plugin=protoc-gen-sgrpc=$<TARGET_FILE:easy_grpc_protoc_plugin>"
                 "${CMAKE_CURRENT_SOURCE_DIR}/hello.proto"
                 MAIN_DEPENDENCY ${CMAKE_CURRENT_SOURCE_DIR}/hello.proto
                 DEPENDS easy_grpc_protoc_plugin
@@ -26,21 +26,21 @@ add_custom_command(
                 MAIN_DEPENDENCY ${CMAKE_CURRENT_SOURCE_DIR}/hello.proto
           )
 
-add_library(hello_proto_00
+add_library(hello_proto_03
   generated/hello.egrpc.pb.cc
   generated/hello.pb.cc
 )
 
-target_include_directories(hello_proto_00 PUBLIC .)
-target_link_libraries(hello_proto_00 easy_grpc protobuf::libprotobuf grpc.a)
+target_include_directories(hello_proto_03 PUBLIC .)
+target_link_libraries(hello_proto_03 easy_grpc protobuf::libprotobuf grpc.a)
 
-add_executable(hello_server_00 
+add_executable(hello_server_03 
   server_main.cpp
 )
 
-add_executable(hello_client_00
+add_executable(hello_client_03 
   client_main.cpp
 )
 
-target_link_libraries(hello_server_00 hello_proto_00)
-target_link_libraries(hello_client_00 hello_proto_00)
+target_link_libraries(hello_server_03 hello_proto_03)
+target_link_libraries(hello_client_03 hello_proto_03)

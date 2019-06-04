@@ -34,6 +34,7 @@ class Method {
   virtual void listen(grpc_server* server, void* registration,
                       grpc_completion_queue* cq) = 0;
 
+  virtual bool immediate_payload_read() const = 0;
  private:
   Completion_queue_set queues_;
   const char* name_;

@@ -11,38 +11,11 @@ using pkg::HelloService;
 using pkg::HelloRequest;
 using pkg::HelloReply;
 
-class Hello_impl final{
+class Hello_impl {
 public:
-  // Says hello
-  Future<HelloReply> SayHello(const HelloRequest& req) {
-    std::cerr << "saying hello\n";
-    if(req.name() == "") {
-      throw rpc::error::invalid_argument("must provide name");
-    }
-
-    // This is actually a synchronous handler.
-    // But all you need to do to make this asynchronous is to return a future
-    // that is fullfilled at a later time.
-    HelloReply rep;
-    rep.set_greeting(std::string("Hello " + req.name()));
-
+  ::easy_grpc::Future<::pkg::HelloReply> SpamedHello(::easy_grpc::Server_reader<::pkg::HelloRequest> req) {
+    ::pkg::HelloReply rep;
     return {rep};
-  }
-
-  // Says Goodbye
-  void SpamHello(::pkg::HelloRequest req, ::easy_grpc::Server_writer<::pkg::HelloReply> rep) {
-    if(req.name() == "") {
-      throw rpc::error::invalid_argument("must provide name");
-    }
-
-    HelloReply rep_val;
-    rep_val.set_greeting(std::string("Goodbye " + req.name()));
-    for(int i = 0 ; i < 100; ++i ) {
-      rep.push(rep_val);
-    }
-
-    // If rep is destroyed before being finished, the RPC will be considered failed.
-    rep.finish();
   }
 };
 

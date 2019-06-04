@@ -181,9 +181,8 @@ void generate_service_header(const ServiceDescriptor* service,
           << ", ::easy_grpc::client::Call_options={}) = 0;\n";
         break;
       case Method_mode::CLIENT_STREAM:
-        dst << "    virtual ::easy_grpc::Future<" << class_name(output) << "> "
-          << method->name() << "(::easy_grpc::Client_writer<" << class_name(input)
-          << ">, ::easy_grpc::client::Call_options={}) = 0;\n";
+        dst << "    virtual std::tuple<::easy_grpc::Client_writer<"<< class_name(input)<<">, ::easy_grpc::Future<" << class_name(output) << ">> "
+          << method->name() << "(::easy_grpc::client::Call_options={}) = 0;\n";
         break;
       case Method_mode::SERVER_STREAM:
         dst << "    virtual ::easy_grpc::Client_reader<" << class_name(output) << "> "
@@ -217,9 +216,8 @@ void generate_service_header(const ServiceDescriptor* service,
           << ", ::easy_grpc::client::Call_options={}) override;\n";
         break;
       case Method_mode::CLIENT_STREAM:
-        dst << "    ::easy_grpc::Future<" << class_name(output) << "> "
-          << method->name() << "(::easy_grpc::Client_writer<" << class_name(input)
-          << ">, ::easy_grpc::client::Call_options={}) override;\n";
+        dst << "    std::tuple<::easy_grpc::Client_writer<"<< class_name(input)<<">, ::easy_grpc::Future<" << class_name(output) << ">> "
+          << method->name() << "(::easy_grpc::client::Call_options={}) override;\n";
         break;
       case Method_mode::SERVER_STREAM:
         dst << "    ::easy_grpc::Client_reader<" << class_name(output) << "> "
@@ -330,15 +328,15 @@ void generate_service_source(const ServiceDescriptor* service,
         << "};\n\n";
       break;
     case Method_mode::CLIENT_STREAM:
-      dst << "::easy_grpc::Future<" << class_name(output) << "> " << name
-        << "::Stub::" << method->name() << "(::easy_grpc::Client_writer<" << class_name(input)
-        << "> req, ::easy_grpc::client::Call_options options) {\n"
-        << "  if(!options.completion_queue) { options.completion_queue = "
+      dst << "std::tuple<::easy_grpc::Client_writer<"<< class_name(input)<<">, ::easy_grpc::Future<" << class_name(output) << ">> "
+          << name << "::Stub::" << method->name() << "(::easy_grpc::client::Call_options options) {\n";
+ 
+      dst << "  if(!options.completion_queue) { options.completion_queue = "
            "default_queue_; }\n"
-        << "  return ::easy_grpc::client::start_unary_call<"
-        << class_name(output) << ">(channel_, " << method->name()
-        << "_tag_, std::move(req), std::move(options));\n"
-        << "};\n\n";
+          << "  return ::easy_grpc::client::start_client_streaming_call<" << class_name(output) << ", " 
+          << class_name(input) << ">(channel_, " << method->name()
+          << "_tag_, std::move(options));\n"
+          << "};\n\n";
       break;
     case Method_mode::SERVER_STREAM:
       dst << "::easy_grpc::Client_reader<" << class_name(output) << "> " << name
@@ -346,7 +344,7 @@ void generate_service_source(const ServiceDescriptor* service,
         << " req, ::easy_grpc::client::Call_options options) {\n"
         << "  if(!options.completion_queue) { options.completion_queue = "
            "default_queue_; }\n"
-        << "  return ::easy_grpc::client::start_client_streaming_call<"
+        << "  return ::easy_grpc::client::start_server_streaming_call<"
         << class_name(output) << ">(channel_, " << method->name()
         << "_tag_, std::move(req), std::move(options));\n"
         << "};\n\n";
@@ -357,17 +355,13 @@ void generate_service_source(const ServiceDescriptor* service,
         << "> req, ::easy_grpc::client::Call_options options) {\n"
         << "  if(!options.completion_queue) { options.completion_queue = "
            "default_queue_; }\n"
-        << "  return ::easy_grpc::client::start_client_streaming_call<"
+        << "  return ::easy_grpc::client::start_bidir_streaming_call<"
         << class_name(output) << ">(channel_, " << method->name()
         << "_tag_, std::move(req), std::move(options));\n"
         << "};\n\n";
       break;
     }
-    
-    
-
   }
-
 }
 
 std::string generate_header(const FileDescriptor* file) {

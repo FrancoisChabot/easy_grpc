@@ -19,7 +19,13 @@ int main() {
   // Call method
   HelloRequest req;
   req.set_name("Frank");
-  auto rep = stub.SayHello(req);
+  auto [req_stream, rep] = stub.SpamedHello();
+
+  for(int i = 0 ; i < 100; ++i) {
+    req_stream.push(req);
+  }
+  req_stream.finish();
+
 
   try {
     std::cout << rep.get().greeting() << "\n...\n";
@@ -27,12 +33,6 @@ int main() {
   catch(std::exception& e) {
     std::cerr << "Something went wrong: " << e.what() << "\n";
   }
-
-  auto stream = stub.SpamHello(req);
-  for(const auto& msg: stream) {
-    std::cout << msg.greeting() << "\n";
-  }
-
 
   return 0;
 }

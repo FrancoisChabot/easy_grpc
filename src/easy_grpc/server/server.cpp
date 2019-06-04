@@ -70,7 +70,8 @@ Server::Server(const Config& cfg) : default_queues_(cfg.default_queues_) {
     auto method_ptr = std::get<0>(m);
     std::get<1>(m) = grpc_server_register_method(
         impl_, method_ptr->name(), nullptr,
-        GRPC_SRM_PAYLOAD_READ_INITIAL_BYTE_BUFFER, 0);
+        method_ptr->immediate_payload_read() ? GRPC_SRM_PAYLOAD_READ_INITIAL_BYTE_BUFFER : GRPC_SRM_PAYLOAD_NONE, 0);
+    assert(std::get<1>(m));
   }
 
   grpc_server_start(impl_);

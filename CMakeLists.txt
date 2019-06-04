@@ -64,6 +64,7 @@ if(EASY_GRPC_BUILD_EXAMPLES)
   add_subdirectory(examples/00_hello_rpc)
   add_subdirectory(examples/01_non_protobuf)
   add_subdirectory(examples/02_streaming_reply)
+  add_subdirectory(examples/03_streaming_request)
 endif()
 
 if(EASY_GRPC_BUILD_TESTS)
