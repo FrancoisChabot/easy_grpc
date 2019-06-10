@@ -18,7 +18,7 @@
 #include "easy_grpc/config.h"
 #include "easy_grpc/server/methods/method.h"
 
-#include "easy_grpc/third_party/function_traits.h"
+#include "easy_grpc/function_traits.h"
 
 #include <cassert>
 #include <iostream>
@@ -31,7 +31,7 @@ class Server_reader_interface {
 public:
   virtual ~Server_reader_interface() {};
 
-  virtual Future<> for_each(std::function<void(T)>) = 0;
+  virtual Future<void> for_each(std::function<void(T)>) = 0;
 };
 
 template<typename T>
@@ -41,7 +41,7 @@ struct Server_reader {
   using value_type = T;
   
   template<typename CbT>
-  Future<> for_each(CbT cb) {
+  Future<void> for_each(CbT cb) {
     return tgt_->for_each(std::move(cb));
   }
 
@@ -56,7 +56,7 @@ class Client_streaming_call_handler : public Completion_queue::Completion, publi
   using value_type = typename RepT::value_type;
 
   std::function<void(ReqT)> visitor_;
-  Promise<> prom_;
+  Promise<void> prom_;
   Future<value_type> reply_fut_;
 
 public:
@@ -71,7 +71,7 @@ public:
     grpc_metadata_array_destroy(&server_metadata_);
   }
 
-  Future<> for_each(std::function<void(ReqT)> visitor) {
+  Future<void> for_each(std::function<void(ReqT)> visitor) {
     visitor_ = std::move(visitor);
     return prom_.get_future();
   }

@@ -29,17 +29,37 @@ class Channel {
  public:
   Channel() = default;
 
-  virtual ~Channel();
+  virtual ~Channel() {
+    if (handle_) {
+     grpc_channel_destroy(handle_);
+    }
+  }
 
-  void* register_method(const char* name);
+  void* register_method(const char* name) {
+    return grpc_channel_register_call(handle_, name, nullptr, nullptr); 
+  }
 
-  Completion_queue* default_queue() const;
-  grpc_channel* handle() const;
+  Completion_queue* default_queue() const { return default_queue_; }
+  grpc_channel* handle() const { return handle_; }
 
  protected:
-  Channel(grpc_channel*, Completion_queue*);
-  Channel(Channel&& rhs);
-  Channel& operator=(Channel&& rhs);
+  Channel(grpc_channel* handle, Completion_queue* queue)
+    : handle_(handle), default_queue_(queue) {}
+
+  Channel(Channel&& rhs)     
+    : handle_(rhs.handle_), default_queue_(rhs.default_queue_) {
+    rhs.handle_ = nullptr;
+    rhs.default_queue_ = nullptr;
+  }
+
+  Channel& operator=(Channel&& rhs) {
+    handle_ = rhs.handle_;
+    default_queue_ = rhs.default_queue_;
+
+    rhs.handle_ = nullptr;
+    rhs.default_queue_ = nullptr;
+    return *this;
+  }
 
  private:
   grpc_channel* handle_ = nullptr;

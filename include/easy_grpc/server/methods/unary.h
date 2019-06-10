@@ -19,7 +19,7 @@
 #include "easy_grpc/server/methods/method.h"
 
 #include "easy_grpc/server/methods/unary_handler.h"
-#include "easy_grpc/third_party/function_traits.h"
+#include "easy_grpc/function_traits.h"
 
 #include <cassert>
 

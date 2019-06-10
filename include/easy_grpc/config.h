@@ -15,6 +15,18 @@
 #ifndef EASY_GRPC_CONFIG_INCLUDED_H
 #define EASY_GRPC_CONFIG_INCLUDED_H
 
+#include "var_future/future.h"
+
+namespace easy_grpc {
+  using aom::expected;
+  using aom::unexpected;
+  using aom::Future;
+  using aom::Promise;
+  using aom::is_future;
+  using aom::is_future_v;
+}
+
+
 #include <cassert>
 #define SGRPC_ASSERT(precond) assert(precond)
 
@@ -24,14 +36,6 @@ constexpr bool easy_grpc_validation_enabled = true;
 constexpr bool easy_grpc_tracing_enabled = false;
 }  // namespace easy_grpc
 
-// easy_grpc requires an implementation of std::expected<>, as proposed in p0323
-// https://github.com/martinmoene/expected-lite is used by default
-#include "easy_grpc/third_party/expected_lite.h"
-namespace easy_grpc {
-template <typename T>
-using expected = nonstd::expected<T, std::exception_ptr>;
-using unexpected = nonstd::unexpected_type<std::exception_ptr>;
-}  // namespace easy_grpc
 
 #define EASY_GRPC_TRACE(ctx, location)
 //#define EASY_GRPC_TRACE(ctx, location) std::cerr << #ctx << " : " << #location

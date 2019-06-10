@@ -15,7 +15,7 @@ public:
     result.b = req.a * 2;
     result.c = req.a * req.a;
 
-    return {result};
+    return Future<Reply_packet>{result};
   }
 
   Future<Reply_packet> bar(Request_packet req) {
@@ -25,7 +25,7 @@ public:
     result.b = req.a * 4;
     result.c = req.a * req.a * req.a;
 
-    return {result};
+    return Future<Reply_packet>{result};
   }
 
   rpc::server::Service_config make_config() {

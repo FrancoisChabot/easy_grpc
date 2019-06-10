@@ -16,8 +16,8 @@
 #define EASY_GRPC_SERVER_SERVICE_CONFIG_H_INCLUDED
 
 #include "easy_grpc/server/service_impl.h"
-#include "easy_grpc/third_party/function_traits.h"
-#include "easy_grpc/third_party/variadic_future.h"
+#include "easy_grpc/function_traits.h"
+#include "var_future/future.h"
 
 #include <string>
 

@@ -93,7 +93,7 @@ TEST(server, failing_call) {
   ::tests::TestRequest req;
   req.set_name("dude");
 
-  EXPECT_THROW(stub.TestMethod(req).get(), rpc::Rpc_error);
+  EXPECT_THROW(stub.TestMethod(req).get_std_future().get(), rpc::Rpc_error);
 }
 
 TEST(server, failing_with_junk) {
@@ -121,7 +121,7 @@ TEST(server, failing_with_junk) {
   ::tests::TestRequest req;
   req.set_name("dude");
 
-  EXPECT_THROW(stub.TestMethod(req).get(), rpc::Rpc_error);
+  EXPECT_THROW(stub.TestMethod(req).get_std_future().get(), rpc::Rpc_error);
 }
 
 TEST(server, failing_async_call) {
@@ -149,7 +149,7 @@ TEST(server, failing_async_call) {
   ::tests::TestRequest req;
   req.set_name("dude");
 
-  EXPECT_THROW(stub.TestMethod(req).get(), rpc::Rpc_error);
+  EXPECT_THROW(stub.TestMethod(req).get_std_future().get(), rpc::Rpc_error);
 }
 
 TEST(server, move_server) {
@@ -184,14 +184,14 @@ TEST(server, move_server) {
           &client_queue);
       stub = std::make_unique<tests::TestService::Stub>(&channel);
 
-      EXPECT_EQ(stub->TestMethod(req).get().name(), "dude_replied");
+      EXPECT_EQ(stub->TestMethod(req).get_std_future().get().name(), "dude_replied");
 
       rpc::server::Server moved_srv(std::move(srv));
-      EXPECT_EQ(stub->TestMethod(req).get().name(), "dude_replied");
+      EXPECT_EQ(stub->TestMethod(req).get_std_future().get().name(), "dude_replied");
 
       dummy = std::move(moved_srv);
     }
-    EXPECT_EQ(stub->TestMethod(req).get().name(), "dude_replied");
+    EXPECT_EQ(stub->TestMethod(req).get_std_future().get().name(), "dude_replied");
   }
-  EXPECT_THROW(stub->TestMethod(req).get(), rpc::Rpc_error);
+  EXPECT_THROW(stub->TestMethod(req).get_std_future().get(), rpc::Rpc_error);
 }

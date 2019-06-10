@@ -15,10 +15,11 @@
 #ifndef EASY_GRPC_LIB_H_INCLUDED
 #define EASY_GRPC_LIB_H_INCLUDED
 
+#include "easy_grpc/config.h"
+
 #include "easy_grpc/completion_queue.h"
 #include "easy_grpc/environment.h"
 #include "easy_grpc/error.h"
-#include "easy_grpc/third_party/variadic_future.h"
 
 #include "easy_grpc/client/method_stub.h"
 #include "easy_grpc/client/unsecure_channel.h"

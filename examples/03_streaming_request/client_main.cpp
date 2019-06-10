@@ -28,7 +28,7 @@ int main() {
 
 
   try {
-    std::cout << rep.get().greeting() << "\n...\n";
+    std::cout << rep.get_std_future().get().greeting() << "\n...\n";
   }
   catch(std::exception& e) {
     std::cerr << "Something went wrong: " << e.what() << "\n";

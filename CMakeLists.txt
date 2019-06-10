@@ -24,7 +24,6 @@ add_subdirectory(protoc_plugin)
 
 
 add_library(easy_grpc
-  src/easy_grpc/client/channel.cpp
   src/easy_grpc/client/unsecure_channel.cpp
   
   src/easy_grpc/server/config.cpp

@@ -26,7 +26,7 @@ public:
     HelloReply rep;
     rep.set_greeting(std::string("Hello " + req.name()));
 
-    return {rep};
+    return Future<HelloReply>{rep};
   }
 
   // Says Goodbye

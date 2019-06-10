@@ -17,6 +17,8 @@
 #ifndef EASY_GRPC_EXT_PROTOBUF_GEN_SUPPORT_INCLUDED_H
 #define EASY_GRPC_EXT_PROTOBUF_GEN_SUPPORT_INCLUDED_H
 
+#include "easy_grpc/config.h"
+
 #include "easy_grpc/ext_protobuf/serialize.h"
 
 #include "easy_grpc/client/channel.h"
@@ -27,6 +29,5 @@
 #include "easy_grpc/server/service_impl.h"
 
 #include "easy_grpc/completion_queue.h"
-#include "easy_grpc/third_party/variadic_future.h"
 
 #endif

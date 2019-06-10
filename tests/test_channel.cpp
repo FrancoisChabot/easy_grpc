@@ -13,7 +13,7 @@ class Test_sync_impl : public tests::TestService {
     ::tests::TestReply result;
     result.set_name(req.name() + "_replied");
 
-    return {result};
+    return ::rpc::Future<::tests::TestReply>{result};
   }
 
   std::array<rpc::Completion_queue, 1> queues;
@@ -44,7 +44,7 @@ TEST(channel, simple_connection) {
       std::string("127.0.0.1:") + std::to_string(server_port), &client_queue);
   tests::TestService::Stub stub(&channel);
 
-  EXPECT_EQ(stub.TestMethod(req).get().name(), "dude_replied");
+  EXPECT_EQ(stub.TestMethod(req).get_std_future().get().name(), "dude_replied");
 }
 
 TEST(channel, delete_from_base_class) {
@@ -69,7 +69,7 @@ TEST(channel, delete_from_base_class) {
           &client_queue);
   tests::TestService::Stub stub(channel.get());
 
-  EXPECT_EQ(stub.TestMethod(req).get().name(), "dude_replied");
+  EXPECT_EQ(stub.TestMethod(req).get_std_future().get().name(), "dude_replied");
 
   auto p = std::make_unique<rpc::client::Channel>();
 }
@@ -112,5 +112,5 @@ TEST(channel, move_channel) {
   EXPECT_NE(nullptr, blank_channel.handle());
 
   tests::TestService::Stub stub(&blank_channel);
-  EXPECT_EQ(stub.TestMethod(req).get().name(), "dude_replied");
+  EXPECT_EQ(stub.TestMethod(req).get_std_future().get().name(), "dude_replied");
 }
