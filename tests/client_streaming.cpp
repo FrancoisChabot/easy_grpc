@@ -55,5 +55,5 @@ TEST(client_streaming, simple_call) {
   }
   req_stream.finish();
 
-  EXPECT_EQ(rep_fut.get_std_future().get().count(), 6);
+  EXPECT_EQ(rep_fut.get().count(), 6);
 }

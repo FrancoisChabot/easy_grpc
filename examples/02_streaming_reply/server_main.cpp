@@ -11,10 +11,10 @@ using pkg::HelloService;
 using pkg::HelloRequest;
 using pkg::HelloReply;
 
-class Hello_impl final{
+class Hello_impl {
 public:
   // Says hello
-  Future<HelloReply> SayHello(const HelloRequest& req) {
+  HelloReply SayHello(const HelloRequest& req) {
     std::cerr << "saying hello\n";
     if(req.name() == "") {
       throw rpc::error::invalid_argument("must provide name");
@@ -26,7 +26,7 @@ public:
     HelloReply rep;
     rep.set_greeting(std::string("Hello " + req.name()));
 
-    return Future<HelloReply>{rep};
+    return rep;
   }
 
   // Says Goodbye

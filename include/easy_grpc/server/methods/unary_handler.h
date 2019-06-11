@@ -173,10 +173,10 @@ class Unary_async_call_handler
     try {
       result = handler(req);
     } catch (...) {
-      result = RepT(std::current_exception());
+      result = RepT::failed(std::current_exception());
     }
 
-    result.then_finally_expect(
+    result.finally(
         [this](expected<value_type> rep) { this->finish(std::move(rep)); });
   }
 };

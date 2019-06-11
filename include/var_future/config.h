@@ -39,7 +39,6 @@ using unexpected = nonstd::unexpected_type<std::exception_ptr>;
 //#define VAR_FUTURE_NO_UB
 
 namespace aom {
-// This default value should be left alone. See below for the configurable value.
 // N.B. 1 vtable + 1 destination storage pointer + 1 function pointer.
 static constexpr std::size_t var_fut_default_min_soo_size = 3 * sizeof(void*);
 
@@ -53,6 +52,8 @@ static constexpr std::size_t var_fut_default_min_soo_size = 3 * sizeof(void*);
 //
 // This variable thus represents the size handlers guaranteed to be stored
 // in SOO storage, which by default matches Future<void>::then([](){});
+//
+// The default value is used in tests, so it should be left alone.
 static constexpr std::size_t var_fut_min_soo_size =
     var_fut_default_min_soo_size;
 }  // namespace aom

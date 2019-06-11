@@ -77,7 +77,7 @@ Multiple arguments:
 ## then_finally_expect
 
     template<typename CbT> 
-    void Future<Ts...>::then_finally_expect(CbT cb);
+    void Future<Ts...>::finally(CbT cb);
 
 The same as `then_expect()`, but the return value of the callback is ignored, and not subsequent future is generated.
 

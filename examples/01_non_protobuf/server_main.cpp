@@ -8,24 +8,24 @@ using rpc::Future;
 
 class Blarg_service {
 public:
-  Future<Reply_packet> foo(Request_packet req) {
+  Reply_packet foo(Request_packet req) {
     Reply_packet result;
     
     result.a = req.a;
     result.b = req.a * 2;
     result.c = req.a * req.a;
 
-    return Future<Reply_packet>{result};
+    return result;
   }
 
-  Future<Reply_packet> bar(Request_packet req) {
+  Reply_packet bar(Request_packet req) {
     Reply_packet result;
     
     result.a = req.a;
     result.b = req.a * 4;
     result.c = req.a * req.a * req.a;
 
-    return Future<Reply_packet>{result};
+    return result;
   }
 
   rpc::server::Service_config make_config() {

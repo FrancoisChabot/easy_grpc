@@ -28,7 +28,7 @@ int main() {
   auto rep_fut = stub.foo(req);
 
   try {
-    Reply_packet rep = rep_fut.get_std_future().get();
+    Reply_packet rep = rep_fut.get();
     std::cout << rep.a << " " << rep.b << " " << rep.c << "\n";
   }
   catch(std::exception& e) {

@@ -14,7 +14,7 @@ class Test_sync_impl : public tests::TestService {
     ::tests::TestReply result;
     result.set_name(req.name() + "_replied");
 
-    return ::rpc::Future<::tests::TestReply> {result};
+    return ::rpc::Future<::tests::TestReply>::fullfilled(result);
   }
 };
 }  // namespace
@@ -44,7 +44,7 @@ TEST(test_easy_grpc, simple_rpc) {
 
     ::tests::TestRequest req;
     req.set_name("dude");
-    EXPECT_EQ(stub.TestMethod(req).get_std_future().get().name(), "dude_replied");
+    EXPECT_EQ(stub.TestMethod(req).get().name(), "dude_replied");
   }
 }
 
@@ -87,6 +87,6 @@ TEST(test_easy_grpc, big_volume) {
   }
 
   for (auto& f : results) {
-    EXPECT_EQ(f.get_std_future().get().name(), "dude_replied");
+    EXPECT_EQ(f.get().name(), "dude_replied");
   }
 }

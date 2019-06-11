@@ -70,7 +70,7 @@ class Custom_service {
  public:
   rpc::Future<Reply_packet> DoWork(const Request_packet& req) {
     Reply_packet result = {req.a, req.a * 2, req.a * req.a};
-    return rpc::Future<Reply_packet>{result};
+    return rpc::Future<Reply_packet>::fullfilled(result);
   }
 
   class Stub {
@@ -114,7 +114,7 @@ TEST(binary_protocol, simple_rpc) {
         std::string("127.0.0.1:") + std::to_string(server_port), &client_queue);
     Custom_service::Stub stub(&channel);
 
-    auto result = stub.DoWork({4}).get_std_future().get();
+    auto result = stub.DoWork({4}).get();
 
     EXPECT_EQ(result.a, 4);
     EXPECT_EQ(result.b, 8);

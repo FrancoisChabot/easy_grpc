@@ -205,7 +205,7 @@ public:
       }
       else {
         prom_.set_value();
-        reply_fut_.then_finally_expect([this](expected<value_type> rep) { 
+        reply_fut_.finally([this](expected<value_type> rep) { 
           this->finish(std::move(rep)); 
         });
       }
