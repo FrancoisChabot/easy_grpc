@@ -23,7 +23,7 @@ servers that need to send rpcs to other services during the handling of a rpc.
 
 
 ```cpp
-class MyService_impl : public pkg::MyService {
+class MyService_impl {
 public:
   MyService_impl(pkg::MyService2::Stub_interface* stub2, 
                  pkg::MyService3::Stub_interface* stub3) 
