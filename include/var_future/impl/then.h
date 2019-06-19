@@ -24,7 +24,7 @@ namespace aom {
 namespace detail {
 
 // Handler class for defered Future::then() execution
-template <typename CbT, typename QueueT, typename... Ts>
+template <typename Alloc, typename CbT, typename QueueT, typename... Ts>
 class Future_then_handler : public Future_handler_base<QueueT, void, Ts...> {
  public:
   using parent_type = Future_handler_base<QueueT, void, Ts...>;
@@ -36,7 +36,7 @@ class Future_then_handler : public Future_handler_base<QueueT, void, Ts...> {
   using cb_result_type =
       decltype(std::apply(std::declval<CbT>(), std::declval<fullfill_type>()));
 
-  using dst_storage_type = Storage_for_cb_result_t<cb_result_type>;
+  using dst_storage_type = Storage_for_cb_result_t<Alloc, cb_result_type>;
   using dst_type = Storage_ptr<dst_storage_type>;
 
   Future_then_handler(QueueT* q, dst_type dst, CbT cb)
@@ -51,10 +51,6 @@ class Future_then_handler : public Future_handler_base<QueueT, void, Ts...> {
     do_finish(this->get_queue(), f, std::move(dst_), std::move(cb_));
   }
 
-  void fail(fail_type e) override {
-    do_fail(this->get_queue(), e, std::move(dst_), std::move(cb_));
-  }
-
   static void do_fullfill(QueueT* q, fullfill_type v, dst_type dst, CbT cb) {
     enqueue(q, [cb = std::move(cb), dst = std::move(dst), v = std::move(v)] {
       try {
@@ -64,8 +60,7 @@ class Future_then_handler : public Future_handler_base<QueueT, void, Ts...> {
         } else {
           if constexpr (is_expected_v<cb_result_type>) {
             dst->finish(std::apply(cb, std::move(v)));
-          }
-          else{
+          } else {
             dst->fullfill(std::apply(cb, std::move(v)));
           }
         }
@@ -81,8 +76,8 @@ class Future_then_handler : public Future_handler_base<QueueT, void, Ts...> {
     if (err) {
       do_fail(q, *err, std::move(dst), std::move(cb));
     } else {
-      fullfill_type cb_args;
-      finish_to_fullfill<0, 0>(std::move(f), cb_args);
+      
+      fullfill_type cb_args = finish_to_fullfill<std::tuple_size_v<finish_type>-1>(std::move(f));
 
       do_fullfill(q, std::move(cb_args), std::move(dst), std::move(cb));
     }

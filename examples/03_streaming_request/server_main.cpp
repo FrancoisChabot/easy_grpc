@@ -15,7 +15,11 @@ class Hello_impl {
 public:
   Future<HelloReply> SpamedHello(::easy_grpc::Server_reader<::pkg::HelloRequest>) {
     HelloReply rep;
-    return Future<HelloReply>::fullfilled(rep);
+
+    Promise<HelloReply> prom;
+    prom.set_value(rep);
+
+    return prom.get_future();
   }
 };
 

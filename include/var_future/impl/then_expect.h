@@ -24,7 +24,7 @@ namespace aom {
 namespace detail {
 
 // handling for Future::finally()
-template <typename CbT, typename QueueT, typename... Ts>
+template <typename Alloc, typename CbT, typename QueueT, typename... Ts>
 class Future_then_expect_handler
     : public Future_handler_base<QueueT, void, Ts...> {
  public:
@@ -37,7 +37,7 @@ class Future_then_expect_handler
   using cb_result_type =
       decltype(std::apply(std::declval<CbT>(), std::declval<finish_type>()));
 
-  using dst_storage_type = Storage_for_cb_result_t<cb_result_type>;
+  using dst_storage_type = Storage_for_cb_result_t<Alloc, cb_result_type>;
   using dst_type = Storage_ptr<dst_storage_type>;
 
   Future_then_expect_handler(QueueT* q, dst_type dst, CbT cb)
@@ -52,13 +52,9 @@ class Future_then_expect_handler
     do_finish(this->get_queue(), std::move(f), std::move(dst_), std::move(cb_));
   };
 
-  void fail(fail_type e) override {
-    do_fail(this->get_queue(), e, std::move(dst_), std::move(cb_));
-  }
-
   static void do_fullfill(QueueT* q, fullfill_type v, dst_type dst, CbT cb) {
-    std::tuple<expected<Ts>...> cb_args;
-    fullfill_to_finish<0, 0>(std::move(v), cb_args);
+     
+    auto cb_args = fullfill_to_finish<0, 0, std::tuple<expected<Ts>...>>(std::move(v));
 
     do_finish(q, std::move(cb_args), std::move(dst), std::move(cb));
   }
@@ -72,8 +68,7 @@ class Future_then_expect_handler
         } else {
           if constexpr (is_expected_v<cb_result_type>) {
             dst->finish(std::apply(cb, std::move(f)));
-          }
-          else{
+          } else {
             dst->fullfill(std::apply(cb, std::move(f)));
           }
         }
@@ -85,8 +80,7 @@ class Future_then_expect_handler
   }
 
   static void do_fail(QueueT* q, fail_type e, dst_type dst, CbT cb) {
-    std::tuple<expected<Ts>...> cb_args;
-    fail_to_expect<0>(e, cb_args);
+    auto cb_args = fail_to_expect<0, std::tuple<expected<Ts>...>>(e);
     do_finish(q, std::move(cb_args), std::move(dst), std::move(cb));
   }
 

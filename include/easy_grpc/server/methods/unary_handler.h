@@ -173,7 +173,9 @@ class Unary_async_call_handler
     try {
       result = handler(req);
     } catch (...) {
-      result = RepT::failed(std::current_exception());
+      typename RepT::promise_type prom;
+      result = prom.get_future();
+      prom.set_exception(std::current_exception());
     }
 
     result.finally(

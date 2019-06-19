@@ -204,10 +204,15 @@ public:
         grpc_byte_buffer_destroy(raw_data);        
       }
       else {
+        std::cerr << "1\n";
         prom_.set_value();
+        std::cerr << "2\n";
         reply_fut_.finally([this](expected<value_type> rep) { 
+        std::cerr << "4\n";  
           this->finish(std::move(rep)); 
+          std::cerr << "5\n";
         });
+        std::cerr << "3\n";
       }
     }
 

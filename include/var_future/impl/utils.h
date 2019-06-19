@@ -21,15 +21,15 @@
 
 namespace aom {
 
-template <typename... Ts>
-class Future;
+template <typename Alloc, typename... Ts>
+class Basic_future;
 
 // Determines wether a type is a Future<...>
 template <typename T>
 struct is_future : public std::false_type {};
 
-template <typename... Ts>
-struct is_future<Future<Ts...>> : public std::true_type {};
+template <typename Alloc, typename... Ts>
+struct is_future<Basic_future<Alloc, Ts...>> : public std::true_type {};
 
 template <typename T>
 constexpr bool is_future_v = is_future<T>::value;
@@ -75,8 +75,8 @@ struct decay_future {
   using type = T;
 };
 
-template <typename T>
-struct decay_future<Future<T>> {
+template <typename Alloc, typename T>
+struct decay_future<Basic_future<Alloc, T>> {
   using type = T;
 };
 
@@ -88,8 +88,7 @@ template <typename LhsT, typename RhsT>
 using tuple_cat_t =
     decltype(std::tuple_cat(std::declval<LhsT>(), std::declval<RhsT>()));
 
-
-template<typename... Ts>
+template <typename... Ts>
 struct future_value_type;
 
 // Determines the fullfillment type of a Future<Ts...>
@@ -112,24 +111,39 @@ struct fullfill_type<T, Ts...> {
 };
 
 
+template<typename FTypeT>
+struct fullfill_to_value {
+  using type = FTypeT;
+};
+
+template<>
+struct fullfill_to_value<std::tuple<>> {
+  using type = void;
+};
+
+template<typename T>
+struct fullfill_to_value<std::tuple<T>> {
+  using type = T;
+};
+
 // Determines the fullfillment type of a Future<Ts...>
 template <typename... Ts>
 using fullfill_type_t = typename fullfill_type<Ts...>::type;
 
-
-template<typename T, typename... Ts>
+template <typename T, typename... Ts>
 struct future_value_type<T, Ts...> {
   using type = T;
 };
 
-template<typename T, typename U, typename... Ts>
+template <typename T, typename U, typename... Ts>
 struct future_value_type<T, U, Ts...> {
-  using type = fullfill_type<T, U, Ts...>;
+  using f_type = fullfill_type_t<T, U, Ts...>;
+
+  using type = typename fullfill_to_value<f_type>::type;
 };
 
 template <typename... Ts>
 using future_value_type_t = typename future_value_type<Ts...>::type;
-
 
 // Determines the finishing type of a Future<Ts...>
 template <typename... Ts>
@@ -139,46 +153,67 @@ using finish_type_t = std::tuple<expected<Ts>...>;
 template <typename... Ts>
 using fail_type_t = std::exception_ptr;
 
-template <std::size_t i, std::size_t j, typename... Ts, typename... Us>
-void finish_to_fullfill(std::tuple<Ts...>&& src, std::tuple<Us...>& dst) {
-  if constexpr (j >= sizeof...(Us)) {
-    return;
-  } else {
-    using src_type = std::tuple_element_t<i, std::tuple<Ts...>>;
-    if constexpr (std::is_same_v<expected<void>, src_type>) {
-      finish_to_fullfill<i + 1, j>(std::move(src), dst);
-    } else {
-      assert(std::get<i>(src).has_value());
-      std::get<j>(dst) = std::move(*std::get<i>(src));
-      finish_to_fullfill<i + 1, j + 1>(std::move(src), dst);
-    }
-  }
-}
-
-template <std::size_t i, std::size_t j, typename... Ts, typename... Us>
-void fullfill_to_finish(std::tuple<Ts...>&& src, std::tuple<Us...>& dst) {
-  static_assert(sizeof...(Ts) <= sizeof...(Us));
-
-  if constexpr (j >= sizeof...(Us)) {
-    return;
-  } else {
-    using dst_type = std::tuple_element_t<j, std::tuple<Us...>>;
-    if constexpr (std::is_same_v<expected<void>, dst_type>) {
-      std::get<j>(dst) = {};
-      fullfill_to_finish<i, j + 1>(std::move(src), dst);
-    } else {
-      std::get<j>(dst) = std::move(std::get<i>(src));
-      fullfill_to_finish<i + 1, j + 1>(std::move(src), dst);
-    }
-  }
-}
-
 template <std::size_t i, typename... Ts>
-void fail_to_expect(const std::exception_ptr& src, std::tuple<Ts...>& dst) {
-  if constexpr (i >= sizeof...(Ts)) {
-    return;
+auto finish_to_fullfill(std::tuple<Ts...>&& src) {
+  (void)src;
+  assert(std::get<i>(src).has_value());
+
+  using val_t = typename std::tuple_element_t<i, std::tuple<Ts...>>::value_type;
+  if constexpr(std::is_same_v<void, val_t>) {
+    if constexpr (i == 0) {
+      return std::tuple<>();
+    }
+    else {
+      return finish_to_fullfill<i-1>(std::move(src));
+    }
+  }
+  else {
+    auto val_tup = std::tuple<val_t>(std::move(*std::get<i>(src)));
+    if constexpr (i == 0) {
+      return val_tup;
+    }
+    else {
+      return std::tuple_cat(finish_to_fullfill<i-1>(std::move(src)), std::move(val_tup));
+    }
+  }
+}
+
+template <std::size_t i, std::size_t j, typename Result_t, typename... Ts>
+auto fullfill_to_finish(std::tuple<Ts...>&& src) {
+  (void)src;
+  using dst_t = std::tuple_element_t<i, Result_t>;
+  if constexpr(std::is_same_v<expected<void>, dst_t>) {
+    if constexpr(i == std::tuple_size_v<Result_t> - 1) {
+      return std::tuple<expected<void>>();
+    }
+    else{
+      return std::tuple_cat(std::tuple<expected<void>>(), fullfill_to_finish<i+1, j, Result_t>(std::move(src)));
+    }
+  }
+  else {
+    using val_t = expected<std::tuple_element_t<j, std::tuple<Ts...>>>;
+    std::tuple<val_t> tup_val(std::move(std::get<j>(src)));
+    
+    if constexpr(i == std::tuple_size_v<Result_t> - 1) {
+      return tup_val;            
+    }
+    else {
+      auto recur = fullfill_to_finish<i+1, j+1, Result_t>(std::move(src));
+      return std::tuple_cat(tup_val, recur);
+    }
+  }
+}
+
+template <std::size_t i, typename T>
+auto fail_to_expect(const std::exception_ptr& src) {
+  (void)src;
+  using element_t = std::tuple_element_t<i, T>;
+  std::tuple<element_t> val_tup(unexpected{src});
+
+  if constexpr (i >= std::tuple_size_v<T>-1) {
+    return val_tup;
   } else {
-    std::get<i>(dst) = unexpected{src};
+    return std::tuple_cat(val_tup, fail_to_expect<i+1, T>(src));
   }
 }
 
@@ -190,7 +225,8 @@ struct Immediate_queue {
   }
 };
 
-static void no_op_test() {}
+inline void no_op_test() {}
+
 // Determines wether T's duck-typed push() method is static.
 // This will be used in Future_handler_base to omit its instantiation
 template <typename T, typename = void>

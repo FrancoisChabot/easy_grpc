@@ -6,14 +6,13 @@
 namespace rpc = easy_grpc;
 
 namespace {
-class Test_sync_impl : public tests::TestService {
+class Test_sync_impl {
  public:
-  ::rpc::Future<::tests::TestReply> TestMethod(
-      ::tests::TestRequest req) override {
+  ::tests::TestReply TestMethod( ::tests::TestRequest req) {
     ::tests::TestReply result;
     result.set_name(req.name() + "_replied");
 
-    return ::rpc::Future<::tests::TestReply>::fullfilled(result);
+    return result;
   }
 
   std::array<rpc::Completion_queue, 1> queues;
@@ -34,7 +33,7 @@ TEST(channel, simple_connection) {
       rpc::server::Config()
           .with_default_listening_queues(
               {sync_srv.queues.begin(), sync_srv.queues.end()})
-          .with_service(sync_srv)
+          .with_service(::tests::TestService::get_config(sync_srv))
           .with_listening_port("127.0.0.1:0", {}, &server_port));
 
   std::cerr << "CCCC\n";
@@ -59,7 +58,7 @@ TEST(channel, delete_from_base_class) {
       rpc::server::Config()
           .with_default_listening_queues(
               {sync_srv.queues.begin(), sync_srv.queues.end()})
-          .with_service(sync_srv)
+          .with_service(::tests::TestService::get_config(sync_srv))
           .with_listening_port("127.0.0.1:0", {}, &server_port));
 
   rpc::Completion_queue client_queue;
@@ -86,7 +85,7 @@ TEST(channel, move_channel) {
       rpc::server::Config()
           .with_default_listening_queues(
               {sync_srv.queues.begin(), sync_srv.queues.end()})
-          .with_service(sync_srv)
+          .with_service(::tests::TestService::get_config(sync_srv))
           .with_listening_port("127.0.0.1:0", {}, &server_port));
 
   rpc::Completion_queue client_queue;

@@ -68,9 +68,9 @@ struct Serializer<Reply_packet> {
 
 class Custom_service {
  public:
-  rpc::Future<Reply_packet> DoWork(const Request_packet& req) {
+  Reply_packet DoWork(const Request_packet& req) {
     Reply_packet result = {req.a, req.a * 2, req.a * req.a};
-    return rpc::Future<Reply_packet>::fullfilled(result);
+    return result;
   }
 
   class Stub {

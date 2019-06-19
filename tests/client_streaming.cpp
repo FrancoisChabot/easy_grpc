@@ -11,10 +11,13 @@ class Test_async_impl {
   using service_type = tests::TestService;
 
   ::easy_grpc::Future<::tests::TestReply> TestMethod(::easy_grpc::Server_reader<::tests::TestRequest> reader) {
+    std::cerr << "XX\n";
     std::shared_ptr<int> count = std::make_shared<int>(0);
     return reader.for_each([count](::tests::TestRequest) mutable {
         *count += 1;
+        std::cerr << "YY\n";
       }).then([count]() {
+        std::cerr << "ZZ\n";
         ::tests::TestReply reply;
         reply.set_count(*count);
         return reply;
@@ -26,12 +29,15 @@ class Test_async_impl {
 TEST(client_streaming, simple_call) {
   rpc::Environment env;
 
+  std::cerr << "1111\n";  
+
   std::array<rpc::Completion_queue, 1> server_queues;
   rpc::Completion_queue client_queue;
   
   
   Test_async_impl async_srv;
 
+  std::cerr << "22222\n";  
   int server_port = 0;
   rpc::server::Server server =
       rpc::server::Config()
@@ -40,20 +46,28 @@ TEST(client_streaming, simple_call) {
           .with_service(tests::TestClientStreamingService::get_config(async_srv))
           .with_listening_port("127.0.0.1:0", {}, &server_port);
 
+  std::cerr << "333333\n";  
   EXPECT_NE(0, server_port);
   
-      rpc::client::Unsecure_channel channel(
+  rpc::client::Unsecure_channel channel(
         std::string("127.0.0.1:") + std::to_string(server_port), &client_queue);
-    tests::TestClientStreamingService::Stub stub(&channel);
 
+  std::cerr << "pre-AA\n";  
+  tests::TestClientStreamingService::Stub stub(&channel);
+
+  std::cerr << "AA\n";
   auto [req_stream, rep_fut] = stub.TestMethod();
 
+  std::cerr << "BB\n";
   ::tests::TestRequest req;
   req.set_name("inc");
   for(int i = 0 ; i < 6; ++i) {
+    std::cerr << "CC\n";
     req_stream.push(req);
   }
+  std::cerr << "DD\n";
   req_stream.finish();
-
+  std::cerr << "EE\n";
   EXPECT_EQ(rep_fut.get().count(), 6);
+  std::cerr << "FF\n";
 }

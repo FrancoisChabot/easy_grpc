@@ -14,7 +14,11 @@ class Test_sync_impl : public tests::TestService {
     ::tests::TestReply result;
     result.set_name(req.name() + "_replied");
 
-    return ::rpc::Future<::tests::TestReply>::fullfilled(result);
+    ::rpc::Promise<::tests::TestReply> prom;
+    auto f = prom.get_future();
+    prom.set_value(result);
+
+    return f;
   }
 };
 }  // namespace
