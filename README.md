@@ -39,7 +39,7 @@ public:
     auto rep_3f = stub_3->Method3(stub3_request);
 
     // Wait for the completion of both requests:
-    return tie(rep_2f, rep_3f).then(
+    return join(rep_2f, rep_3f).then(
       [](auto rep_2, auto rep_3) {
         pkg::Reply reply;
         return reply;
@@ -160,7 +160,7 @@ int main() {
   auto reply_1 = stub.MyMethod({});
   auto reply_2 = stub.MyMethod2({});
 
-  tie(reply_1, reply_2).then_finally([](auto rep_1, auto rep_2) {
+  join(reply_1, reply_2).then_finally([](auto rep_1, auto rep_2) {
     std::cerr << "1 and 2 are both done!\n";
   });
 
