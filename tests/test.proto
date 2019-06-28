@@ -18,3 +18,11 @@ service TestService {
 service TestClientStreamingService {
   rpc TestMethod(stream TestRequest) returns (TestReply) {}
 }
+
+service TestServerStreamingService {
+  rpc TestMethod(TestRequest) returns (stream TestReply) {}
+}
+
+service TestBidirStreamingService {
+  rpc TestMethod(stream TestRequest) returns (stream TestReply) {}
+}

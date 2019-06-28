@@ -30,18 +30,24 @@
 namespace easy_grpc {
 
 template<typename T>
-struct Client_reader {
-  struct iterator {
-    T& operator*() { return *next_; }
-    void operator++() {}
-    bool operator!=(const iterator&) {return false;}
-  
-    T* next_= nullptr;
-  };
+class Client_reader_interface {
+public:
+  virtual ~Client_reader_interface() {}
+  virtual Future<void> for_each(std::function<void(T)>) = 0;
+};
 
-  
-  iterator begin() {return {}; }
-  iterator end() { return {}; }
+template<typename T>
+struct Client_reader {
+  using value_type = T;
+
+  Client_reader(Client_reader_interface<T>* tgt) : tgt_(tgt) {}
+
+  template<typename CbT>
+  Future<void> for_each(CbT cb) {
+    return tgt_->for_each(std::move(cb));
+  }
+
+  Client_reader_interface<T>* tgt_;
 };
 
 template<typename ReqT>
@@ -198,9 +204,166 @@ Future<RepT> start_unary_call(Channel* channel, void* tag, const ReqT& req,
 
 //*********************************************************************************//
 
+namespace detail {
+template <typename RepT>
+class Streaming_call_session final : public Completion_queue::Completion, public Client_reader_interface<RepT> {
+ public:
+  Streaming_call_session(grpc_call* call) : call_(call) {
+    grpc_metadata_array_init(&trailing_metadata_);
+    grpc_metadata_array_init(&server_metadata_);
+  }
+
+  ~Streaming_call_session() {
+    grpc_metadata_array_destroy(&server_metadata_);
+    grpc_metadata_array_destroy(&trailing_metadata_);
+
+    if (recv_buffer_) {
+      grpc_byte_buffer_destroy(recv_buffer_);
+    }
+
+    grpc_call_unref(call_);
+  }
+
+  Future<void> for_each(std::function<void(RepT)> cb) override {
+    assert(send_buffer_);
+    visitor_ = cb;
+    auto result = completion_.get_future();
+
+    std::array<grpc_op, 4> ops;
+
+    ops[0].op = GRPC_OP_SEND_INITIAL_METADATA;
+    ops[0].flags = 0;
+    ops[0].reserved = nullptr;
+    ops[0].data.send_initial_metadata.count = 0;
+    ops[0].data.send_initial_metadata.maybe_compression_level.is_set = 0;
+
+    ops[1].op = GRPC_OP_SEND_MESSAGE;
+    ops[1].flags = 0;
+    ops[1].reserved = nullptr;
+    ops[1].data.send_message.send_message = send_buffer_;
+
+    ops[2].op = GRPC_OP_RECV_INITIAL_METADATA;
+    ops[2].flags = 0;
+    ops[2].reserved = 0;
+    ops[2].data.recv_initial_metadata.recv_initial_metadata =
+        &server_metadata_;
+
+    ops[3].op = GRPC_OP_RECV_MESSAGE;
+    ops[3].flags = 0;
+    ops[3].reserved = 0;
+    ops[3].data.recv_message.recv_message = &recv_buffer_;
+    
+    auto status =
+        grpc_call_start_batch(call_, ops.data(), ops.size(), this, nullptr);
+
+    if (status != GRPC_CALL_OK) {
+      completion_.set_exception(std::make_exception_ptr(error::internal("failed to start call")));
+    }
+
+    grpc_byte_buffer_destroy(send_buffer_);
+    send_buffer_ = nullptr;
+
+    return result;
+  }
+
+  bool exec(bool) noexcept override {
+    bool all_done = finishing_;
+
+    if(!all_done) {
+      if( recv_buffer_) {
+        auto data = recv_buffer_;
+        recv_buffer_ = nullptr;
+
+        std::array<grpc_op, 1> ops;
+
+        ops[0].op = GRPC_OP_RECV_MESSAGE;
+        ops[0].flags = 0;
+        ops[0].reserved = 0;
+        ops[0].data.recv_message.recv_message = &recv_buffer_;
+
+        auto call_status =
+            grpc_call_start_batch(call_, ops.data(), ops.size(), static_cast<Completion_queue::Completion*>(this), nullptr);
+
+        if (call_status != GRPC_CALL_OK) {
+          assert(false);
+        }
+
+        visitor_(deserialize<RepT>(data));
+        grpc_byte_buffer_destroy(data);
+      }
+      else {
+        std::array<grpc_op, 2> ops;
+
+        ops[0].op = GRPC_OP_SEND_CLOSE_FROM_CLIENT;
+        ops[0].flags = 0;
+        ops[0].reserved = 0;
+
+        ops[1].op = GRPC_OP_RECV_STATUS_ON_CLIENT;
+        ops[1].flags = 0;
+        ops[1].reserved = 0;
+        ops[1].data.recv_status_on_client.trailing_metadata =
+            &trailing_metadata_;
+        ops[1].data.recv_status_on_client.status = &status_;
+        ops[1].data.recv_status_on_client.status_details =
+            &status_details_;
+        ops[1].data.recv_status_on_client.error_string = &error_string_;
+        
+        finishing_ = true;
+
+        auto call_status =
+            grpc_call_start_batch(call_, ops.data(), ops.size(), static_cast<Completion_queue::Completion*>(this), nullptr);
+
+        if (call_status != GRPC_CALL_OK) {
+          assert(false);
+        }
+      }
+    }
+    else {
+      if (status_ == GRPC_STATUS_OK) {
+        completion_.set_value();
+      } else {
+        try {
+          auto str = grpc_slice_to_c_string(status_details_);
+          auto err = Rpc_error(status_, str);
+          gpr_free(str);
+          throw err;
+        } catch (...) {
+          completion_.set_exception(std::current_exception());
+        }
+      }
+    }
+
+    return all_done;
+  }
+
+  grpc_call* call_;
+  grpc_byte_buffer* send_buffer_;
+  std::function<void(RepT)> visitor_;
+  Promise<void> completion_;
+
+  grpc_byte_buffer* recv_buffer_ = nullptr;
+  bool finishing_ = false;
+
+  grpc_metadata_array server_metadata_;
+
+  grpc_metadata_array trailing_metadata_;
+  grpc_status_code status_;
+  grpc_slice status_details_;
+  const char* error_string_;
+};
+}  // namespace detail
+
 template <typename RepT, typename ReqT>
-Client_reader<RepT> start_server_streaming_call(Channel*, void*, const ReqT&, Call_options) {
-  return {};
+Client_reader<RepT> start_server_streaming_call(Channel* channel, void* tag, const ReqT& req, Call_options options) {
+ assert(options.completion_queue);
+
+  auto call = grpc_channel_create_registered_call(
+      channel->handle(), nullptr, GRPC_PROPAGATE_DEFAULTS,
+      options.completion_queue->handle(), tag, options.deadline, nullptr);
+  auto completion = new detail::Streaming_call_session<RepT>(call);
+  completion->send_buffer_ = serialize(req);
+
+  return {completion};
 }
 
 
@@ -400,7 +563,11 @@ std::tuple<Client_writer<ReqT>, Future<RepT>> start_client_streaming_call(Channe
 
 template <typename RepT, typename ReqT>
 Client_reader<RepT> start_bidir_streaming_call(Channel* channel, void* tag, const ReqT& req, Call_options options) {
-  return {};
+  (void)channel;
+  (void)tag;
+  (void)req;
+  (void)options;
+  return {nullptr};
 }
 
 }  // namespace client

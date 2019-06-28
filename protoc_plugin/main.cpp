@@ -266,7 +266,7 @@ void generate_service_header(const ServiceDescriptor* service,
       break;
     case Method_mode::BIDIR_STREAM:
       dst << "    result.add_method("
-        << method_name_cste(method) << ", [&impl](::easy_grpc::Server_reader<" << class_name(input) << "> req, ::easy_grpc::Server_writer"<<class_name(output) <<" rep){impl." << method->name() << "(std::move(req), std::move(rep));});\n"; 
+        << method_name_cste(method) << ", [&impl](::easy_grpc::Server_reader<" << class_name(input) << "> req, ::easy_grpc::Server_writer<"<<class_name(output) <<"> rep){impl." << method->name() << "(std::move(req), std::move(rep));});\n"; 
       break;
     }
 

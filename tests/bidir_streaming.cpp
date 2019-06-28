@@ -8,26 +8,29 @@ namespace rpc = easy_grpc;
 namespace {
 class Test_async_impl {
  public:
-  using service_type = tests::TestClientStreamingService;
+  using service_type = tests::TestBidirStreamingService;
 
-  ::easy_grpc::Future<::tests::TestReply> TestMethod(::easy_grpc::Server_reader<::tests::TestRequest> reader) {
+  void TestMethod(::easy_grpc::Server_reader<::tests::TestRequest> req, ::easy_grpc::Server_writer<::tests::TestReply> rep)
     std::shared_ptr<int> count = std::make_shared<int>(0);
-    return reader.for_each([count](::tests::TestRequest) mutable {
-        *count += 1;
-      }).then([count]() {
+
+    return reader.for_each([count, rep](::tests::TestRequest) mutable {
         ::tests::TestReply reply;
-        reply.set_count(*count);
+        rep.push(reply);
+        
+      }).then([count, rep]() {
+        rep.finish();
         return reply;
       });
   }
 };
 }
 
-TEST(client_streaming, simple_call) {
+TEST(bidir_streaming, simple_call) {
   rpc::Environment env;
 
   std::array<rpc::Completion_queue, 1> server_queues;
   rpc::Completion_queue client_queue;
+  
   
   Test_async_impl async_srv;
 
@@ -49,7 +52,6 @@ TEST(client_streaming, simple_call) {
   auto [req_stream, rep_fut] = stub.TestMethod();
 
   ::tests::TestRequest req;
-  req.set_name("inc");
   for(int i = 0 ; i < 6; ++i) {
     req_stream.push(req);
   }

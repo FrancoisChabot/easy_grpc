@@ -15,6 +15,9 @@
 #ifndef EASY_GRPC_SERVER_SERVICE_IMPL_INCLUDED_H
 #define EASY_GRPC_SERVER_SERVICE_IMPL_INCLUDED_H
 
+#include "easy_grpc/server/methods/server_reader.h"
+#include "easy_grpc/server/methods/server_writer.h"
+
 #include "easy_grpc/server/methods/server_streaming.h"
 #include "easy_grpc/server/methods/client_streaming.h"
 #include "easy_grpc/server/methods/unary.h"
@@ -46,19 +49,6 @@ auto make_client_streaming_method(const char* name, CbT cb) {
 
 }  // namespace server
 
-
-
-template<typename T>
-struct Server_writer {
-  using value_type = T;
-
-  void push(const T& ) {}
-
-  void finish() {}
-
-  template<typename ErrT>
-  void fail(ErrT&&);
-};
 
 
 template<typename T>

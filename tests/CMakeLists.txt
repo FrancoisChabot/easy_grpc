@@ -42,6 +42,7 @@ add_executable(easy_grpc_tests
   environment.cpp
   end_to_end.cpp
   server.cpp
+  server_streaming.cpp
 )
 
 target_link_libraries(easy_grpc_tests easy_grpc GTest::gtest_main GTest::gtest GTest::gmock protobuf::libprotobuf grpc.a)

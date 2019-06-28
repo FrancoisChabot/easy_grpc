@@ -29,9 +29,9 @@ int main() {
   }
 
   auto stream = stub.SpamHello(req);
-  for(const auto& msg: stream) {
+  stream.for_each([](auto msg){
     std::cout << msg.greeting() << "\n";
-  }
+  });
 
 
   return 0;

@@ -16,7 +16,11 @@
 #define EASY_GRPC_SERVER_METHOD_CLIENT_STREAMING_H_INCLUDED
 
 #include "easy_grpc/config.h"
+
+#include "easy_grpc/error.h"
+
 #include "easy_grpc/server/methods/method.h"
+#include "easy_grpc/server/methods/server_reader.h"
 
 #include "easy_grpc/function_traits.h"
 
@@ -24,30 +28,6 @@
 #include <iostream>
 
 namespace easy_grpc {
-
-
-template<typename T>
-class Server_reader_interface {
-public:
-  virtual ~Server_reader_interface() {};
-
-  virtual Future<void> for_each(std::function<void(T)>) = 0;
-};
-
-template<typename T>
-struct Server_reader {
-  Server_reader(Server_reader_interface<T>* tgt) : tgt_(tgt) {}
-
-  using value_type = T;
-  
-  template<typename CbT>
-  Future<void> for_each(CbT cb) {
-    return tgt_->for_each(std::move(cb));
-  }
-
-  Server_reader_interface<T>* tgt_;
-};
-
 namespace server {
 namespace detail {
 
@@ -204,15 +184,10 @@ public:
         grpc_byte_buffer_destroy(raw_data);        
       }
       else {
-        std::cerr << "1\n";
         prom_.set_value();
-        std::cerr << "2\n";
         reply_fut_.finally([this](expected<value_type> rep) { 
-        std::cerr << "4\n";  
           this->finish(std::move(rep)); 
-          std::cerr << "5\n";
         });
-        std::cerr << "3\n";
       }
     }
 
