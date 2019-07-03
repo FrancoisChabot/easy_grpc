@@ -16,12 +16,15 @@
 #define EASY_GRPC_CONFIG_INCLUDED_H
 
 #include "var_future/future.h"
+#include "var_future/stream_future.h"
 
 namespace easy_grpc {
   using aom::expected;
   using aom::unexpected;
   using aom::Future;
+  using aom::Stream_future;
   using aom::Promise;
+  using aom::Stream_promise;
   using aom::is_future;
   using aom::is_future_v;
 }

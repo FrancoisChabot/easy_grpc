@@ -18,11 +18,9 @@
 #include "easy_grpc/config.h"
 
 #include "easy_grpc/error.h"
-
 #include "easy_grpc/server/methods/method.h"
-#include "easy_grpc/server/methods/server_reader.h"
-
 #include "easy_grpc/function_traits.h"
+#include "easy_grpc/server/methods/ops.h"
 
 #include <cassert>
 #include <iostream>
@@ -31,15 +29,12 @@ namespace easy_grpc {
 namespace server {
 namespace detail {
 
-template <typename ReqT, typename RepT>
-class Client_streaming_call_handler : public Completion_queue::Completion, public Server_reader_interface<ReqT> {
-  using value_type = typename RepT::value_type;
-
-  std::function<void(ReqT)> visitor_;
-  Promise<void> prom_;
-  Future<value_type> reply_fut_;
-
+template <typename ReqT, typename RepT, bool sync>
+class Client_streaming_call_handler : public Completion_callback {
+  Stream_promise<ReqT> reader_prom_;
+  
 public:
+  static constexpr bool immediate_payload = false;
 
   Client_streaming_call_handler() {
     grpc_metadata_array_init(&request_metadata_);
@@ -51,116 +46,46 @@ public:
     grpc_metadata_array_destroy(&server_metadata_);
   }
 
-  Future<void> for_each(std::function<void(ReqT)> visitor) {
-    visitor_ = std::move(visitor);
-    return prom_.get_future();
-  }
-
   template<typename CbT>
-  void perform(const CbT& cb) {
-      Server_reader<ReqT> reader(this);
-      reply_fut_ = cb(std::move(reader));
+  void perform(const CbT& cb) {      
+    auto reply_fut = cb(reader_prom_.get_future());
 
-      assert(visitor_);
+    std::array<grpc_op, 2> ops;
+    ops[0].op = GRPC_OP_SEND_INITIAL_METADATA;
+    ops[0].flags = 0;
+    ops[0].reserved = 0;
+    ops[0].data.send_initial_metadata.count = server_metadata_.count;
+    ops[0].data.send_initial_metadata.metadata = server_metadata_.metadata;
+    ops[0].data.send_initial_metadata.maybe_compression_level.is_set = false;
 
-      std::array<grpc_op, 2> ops;
-      ops[0].op = GRPC_OP_SEND_INITIAL_METADATA;
-      ops[0].flags = 0;
-      ops[0].reserved = 0;
-      ops[0].data.send_initial_metadata.count = server_metadata_.count;
-      ops[0].data.send_initial_metadata.metadata = server_metadata_.metadata;
-      ops[0].data.send_initial_metadata.maybe_compression_level.is_set = false;
+    ops[1].op = GRPC_OP_RECV_MESSAGE;
+    ops[1].flags = 0;
+    ops[1].reserved = 0;
+    ops[1].data.recv_message.recv_message = &payload_;
 
-      ops[1].op = GRPC_OP_RECV_MESSAGE;
-      ops[1].flags = 0;
-      ops[1].reserved = 0;
-      ops[1].data.recv_message.recv_message = &payload_;
+    auto call_status =
+        grpc_call_start_batch(call_, ops.data(), ops.size(), completion_tag().data, nullptr);
 
-      auto call_status =
-          grpc_call_start_batch(call_, ops.data(), ops.size(), static_cast<Completion_queue::Completion*>(this), nullptr);
+    if (call_status != GRPC_CALL_OK) {
+      std::cerr << grpc_call_error_to_string(call_status) << "\n";
+      assert(false);  // TODO: HANDLE THIS
+    }
 
-      if (call_status != GRPC_CALL_OK) {
-        std::cerr << grpc_call_error_to_string(call_status) << "\n";
-        assert(false);  // TODO: HANDLE THIS
-      }
+    reply_fut.finally([this](expected<RepT> rep) { 
+      this->finish(std::move(rep)); 
+    });
   }
 
-  //TODO: this is the same as the unary call, remove code duplication.
-  void finish(expected<value_type> rep) {
-    finishing = true; 
+  void finish(expected<RepT> rep) {
     if (rep.has_value()) {
-      std::array<grpc_op, 3> ops;
-
-      auto buffer = serialize(rep.value());
-      ops[0].op = GRPC_OP_SEND_MESSAGE;
-      ops[0].flags = 0;
-      ops[0].reserved = nullptr;
-      ops[0].data.send_message.send_message = buffer;
-
-      ops[1].op = GRPC_OP_SEND_STATUS_FROM_SERVER;
-      ops[1].flags = 0;
-      ops[1].reserved = nullptr;
-      ops[1].data.send_status_from_server.trailing_metadata_count = 0;
-      ops[1].data.send_status_from_server.trailing_metadata = nullptr;
-      ops[1].data.send_status_from_server.status = GRPC_STATUS_OK;
-      ops[1].data.send_status_from_server.status_details = nullptr;
-
-      ops[2].op = GRPC_OP_RECV_CLOSE_ON_SERVER;
-      ops[2].flags = 0;
-      ops[2].reserved = nullptr;
-      ops[2].data.recv_close_on_server.cancelled = &cancelled_;
-
-      auto call_status =
-          grpc_call_start_batch(call_, ops.data(), ops.size(), static_cast<Completion_queue::Completion*>(this), nullptr);
-
-      grpc_byte_buffer_destroy(buffer);
-
-      if (call_status != GRPC_CALL_OK) {
-        assert(false);  // TODO: HANDLE T2IS
-      }
-
+      send_unary_response(call_, rep.value(), nullptr, &cancelled_, completion_tag(true));
     } else {
       // The call has failed.
-      std::array<grpc_op, 2> ops;
-
-      grpc_status_code status = GRPC_STATUS_UNKNOWN;
-      grpc_slice details = grpc_empty_slice();
-
-      // If we can extract an error code,2and message, do so.
-      try {
-        std::rethrow_exception(rep.error());
-      } catch (Rpc_error& e) {
-        status = e.code();
-        details = grpc_slice_from_copied_string(e.what());
-      } catch (...) {
-      }
-      ops[0].op = GRPC_OP_SEND_STATUS_FROM_SERVER;
-      ops[0].flags = 0;
-      ops[0].reserved = nullptr;
-      ops[0].data.send_status_from_server.trailing_metadata_count = 0;
-      ops[0].data.send_status_from_server.trailing_metadata = nullptr;
-      ops[0].data.send_status_from_server.status = status;
-      ops[0].data.send_status_from_server.status_details = &details;
-
-      ops[1].op = GRPC_OP_RECV_CLOSE_ON_SERVER;
-      ops[1].flags = 0;
-      ops[1].reserved = nullptr;
-      ops[1].data.recv_close_on_server.cancelled = &cancelled_;
-
-      auto call_status =
-          grpc_call_start_batch(call_, ops.data(), ops.size(), static_cast<Completion_queue::Completion*>(this), nullptr);
-
-      grpc_slice_unref(details);
-
-      if (call_status != GRPC_CALL_OK) {
-        assert(false);  // TODO: HANDLE THIS
-      }
+      send_failure(call_, rep.error(), nullptr, &cancelled_, completion_tag(true));
     }
   }
 
-  bool exec(bool) noexcept override {
-    bool all_done = finishing;
-
+  bool exec(bool, bool all_done) noexcept override {
     if(!all_done) {
       if(payload_) {
         auto raw_data = payload_;
@@ -174,27 +99,23 @@ public:
         ops[0].data.recv_message.recv_message = &payload_;
 
         auto call_status =
-            grpc_call_start_batch(call_, ops.data(), ops.size(), static_cast<Completion_queue::Completion*>(this), nullptr);
+            grpc_call_start_batch(call_, ops.data(), ops.size(), completion_tag().data, nullptr);
 
         if (call_status != GRPC_CALL_OK) {
           assert(false);
         }
 
-        visitor_(deserialize<ReqT>(raw_data));
+        reader_prom_.push(deserialize<ReqT>(raw_data));
         grpc_byte_buffer_destroy(raw_data);        
       }
       else {
-        prom_.set_value();
-        reply_fut_.finally([this](expected<value_type> rep) { 
-          this->finish(std::move(rep)); 
-        });
+        reader_prom_.complete();
       }
     }
 
     return all_done;
   }
 
-  bool finishing = false;
   int cancelled_ = false;
   grpc_call* call_ = nullptr;
   gpr_timespec deadline_;
@@ -205,84 +126,6 @@ public:
 
 
   
-template <typename CbT>
-class Client_streaming_call_listener : public Completion_queue::Completion {
-    using InReaderT = typename function_traits<CbT>::template arg<0>::type;
-    using OutT = typename function_traits<CbT>::result_type;
-    using InT = typename InReaderT::value_type;
-
-    using handler_type = Client_streaming_call_handler<InT, OutT>;
- public:
-  Client_streaming_call_listener(grpc_server* server, void* registration,
-                      grpc_completion_queue* cq, CbT cb)
-      : srv_(server), reg_(registration), cq_(cq), cb_(std::move(cb)) {
-    // It's really important that inject is not called here. As the object
-    // could end up being deleted before it's fully constructed.
-  }
-
-  ~Client_streaming_call_listener() {
-    if (pending_call_) {
-      delete pending_call_;
-    }
-  }
-
-  bool exec(bool success) noexcept override {
-    EASY_GRPC_TRACE(Client_streaming_call_listener, exec);
-
-    if (success) {
-      pending_call_->perform(cb_);
-      pending_call_ = nullptr;
-
-      // Listen for a new call.
-      inject();
-      return false;  // This object is recycled.
-    }
-
-    return true;
-  }
-
-  void inject() {
-    EASY_GRPC_TRACE(Server_streaming_call_listener, inject);
-
-    assert(pending_call_ == nullptr);
-
-
-    pending_call_ = new handler_type;
-    auto status = grpc_server_request_registered_call(
-        srv_, reg_, &pending_call_->call_, &pending_call_->deadline_,
-        &pending_call_->request_metadata_, nullptr, cq_, cq_,
-        this);
-
-    assert(status == GRPC_CALL_OK);
-  }
-
-  grpc_server* srv_;
-  void* reg_;
-  grpc_completion_queue* cq_;
-  CbT cb_;
-
-  handler_type* pending_call_ = nullptr;
-};
-
-template <typename CbT>
-class Client_streaming_method : public Method {
- public:
-  Client_streaming_method(const char* name, CbT cb) : Method(name), cb_(cb) {}
-
-  void listen(grpc_server* server, void* registration,
-              grpc_completion_queue* cq) override {
-
-    auto handler =
-        new Client_streaming_call_listener<CbT>(server, registration, cq, cb_);
-    handler->inject();
-  }
-
-  bool immediate_payload_read() const override {
-    return false;
-  }
- private:
-  CbT cb_;
-};
 }
 }
 }

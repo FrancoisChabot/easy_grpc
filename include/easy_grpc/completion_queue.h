@@ -22,21 +22,40 @@
 
 namespace easy_grpc {
 // A completion queue, with a matching thread that consumes from it.
+
+struct Completion_tag {
+  void* data;
+
+private:
+  friend class Completion_callback;
+  Completion_tag(void* d) : data(d) {}
+};
+
+class Completion_callback {
+  public:
+  virtual ~Completion_callback() {}
+
+  // TODO: replace bool with an enum
+  virtual bool exec(bool success, bool alternate) noexcept = 0;
+
+  Completion_tag completion_tag(bool alternate=false) {
+    intptr_t tag_val = reinterpret_cast<intptr_t>(this);
+    if(alternate) {
+      tag_val |= 1;
+    }
+
+    return reinterpret_cast<void*>(tag_val);
+  }
+};
+
 class Completion_queue {
  public:
-  class Completion {
-   public:
-    virtual ~Completion() {}
-
-    // TODO: replace bool with an enum
-    virtual bool exec(bool success) noexcept = 0;
-  };
-
   Completion_queue();
   ~Completion_queue();
 
   grpc_completion_queue* handle() { return handle_; }
 
+  
  private:
   void worker_main();
   std::thread thread_;

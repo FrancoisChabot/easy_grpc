@@ -15,9 +15,7 @@
 #ifndef EASY_GRPC_SERVER_SERVICE_IMPL_INCLUDED_H
 #define EASY_GRPC_SERVER_SERVICE_IMPL_INCLUDED_H
 
-#include "easy_grpc/server/methods/server_reader.h"
-#include "easy_grpc/server/methods/server_writer.h"
-
+//#include "easy_grpc/server/methods/bidir_streaming.h"
 #include "easy_grpc/server/methods/server_streaming.h"
 #include "easy_grpc/server/methods/client_streaming.h"
 #include "easy_grpc/server/methods/unary.h"
@@ -31,17 +29,23 @@ namespace detail {
 
 template <typename CbT>
 auto make_unary_method(const char* name, CbT cb) {
-  return std::make_unique<Unary_method<CbT>>(name, std::move(cb));
+  return std::make_unique<Method_impl<Unary_call_handler, CbT>>(name, std::move(cb));
 }
 
 template <typename CbT>
 auto make_server_streaming_method(const char* name, CbT cb) {
-  return std::make_unique<Server_streaming_method<CbT>>(name, std::move(cb));
+  return std::make_unique<Method_impl<Server_streaming_call_handler, CbT>>(name, std::move(cb));
 }
 
 template <typename CbT>
 auto make_client_streaming_method(const char* name, CbT cb) {
-  return std::make_unique<Client_streaming_method<CbT>>(name, std::move(cb));
+  return std::make_unique<Method_impl<Client_streaming_call_handler, CbT>>(name, std::move(cb));
+}
+
+template <typename CbT>
+auto make_bidir_streaming_method(const char* name, CbT cb) {
+  return nullptr;
+  //return std::make_unique<Bidir_streaming_method<CbT>>(name, std::move(cb));
 }
 
 
@@ -55,7 +59,7 @@ template<typename T>
 struct is_server_reader : public std::false_type {};
 
 template<typename T>
-struct is_server_reader<Server_reader<T>> : public std::true_type {};
+struct is_server_reader<Stream_future<T>> : public std::true_type {};
 
 template<typename T>
 constexpr bool is_server_reader_v = is_server_reader<T>::value;
@@ -65,7 +69,7 @@ template<typename T>
 struct is_server_writer : public std::false_type {};
 
 template<typename T>
-struct is_server_writer<Server_writer<T>> : public std::true_type {};
+struct is_server_writer<Stream_future<T>> : public std::true_type {};
 
 template<typename T>
 constexpr bool is_server_writer_v = is_server_writer<T>::value;

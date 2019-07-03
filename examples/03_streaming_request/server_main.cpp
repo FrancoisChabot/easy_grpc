@@ -13,7 +13,7 @@ using pkg::HelloReply;
 
 class Hello_impl {
 public:
-  Future<HelloReply> SpamedHello(::easy_grpc::Server_reader<::pkg::HelloRequest>) {
+  Future<HelloReply> SpamedHello(::easy_grpc::Stream_future<::pkg::HelloRequest>) {
     HelloReply rep;
 
     Promise<HelloReply> prom;
