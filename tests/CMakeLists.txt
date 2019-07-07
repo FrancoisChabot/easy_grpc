@@ -35,7 +35,7 @@ add_custom_command(
 add_executable(easy_grpc_tests 
   generated/test.egrpc.pb.cc
   generated/test.pb.cc
-#  bidir_streaming.cpp
+  bidir_streaming.cpp
   binary_protocol.cpp
   client_streaming.cpp
   test_channel.cpp

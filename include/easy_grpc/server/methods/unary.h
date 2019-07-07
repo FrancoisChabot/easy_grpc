@@ -19,7 +19,7 @@
 #include "easy_grpc/error.h"
 #include "easy_grpc/serialize.h"
 #include "easy_grpc/function_traits.h"
-#include "easy_grpc/server/methods/ops.h"
+#include "easy_grpc/server/methods/call_handler.h"
 #include "var_future/future.h"
 
 #include "grpc/grpc.h"
@@ -33,25 +33,17 @@ namespace detail {
 // Unary calls are a bit special in the sense that we allow the handlers to be fully synchronous by returning
 // a RepT (as opposed to a Future<RepT>)
 template <typename RepT>
-class Unary_call_handler_base : public Completion_callback {
- public:
+class Unary_call_handler_base : public Call_handler {
+public:
+  grpc_byte_buffer* payload_ = nullptr;
   static constexpr bool immediate_payload = true;
   
-  Unary_call_handler_base() {
-    grpc_metadata_array_init(&request_metadata_);
-    grpc_metadata_array_init(&server_metadata_);
-  }
+  Unary_call_handler_base() {}
 
   ~Unary_call_handler_base() {
     if(payload_) {
       grpc_byte_buffer_destroy(payload_);
     }
-  
-    if(call_) {
-      grpc_call_unref(call_);
-    }
-    grpc_metadata_array_destroy(&request_metadata_);
-    grpc_metadata_array_destroy(&server_metadata_);
   }
 
   bool exec(bool, bool) noexcept override {
@@ -60,23 +52,11 @@ class Unary_call_handler_base : public Completion_callback {
 
   void finish(expected<RepT> rep) {
     if (rep.has_value()) {
-      send_unary_response(call_, rep.value(), &server_metadata_, &cancelled_, completion_tag());
+      send_unary_response(rep.value(), true, false);
     } else {
-      // The call has failed.
-      send_failure(call_, rep.error(), &server_metadata_, &cancelled_, completion_tag());
+      send_failure(rep.error(), true, false);
     }
   }
-
-  grpc_call* call_ = nullptr;
-
-  //Request-related
-  gpr_timespec deadline_;
-  grpc_metadata_array request_metadata_;
-  grpc_byte_buffer* payload_ = nullptr;
-
-  //Reply-related
-  int cancelled_ = false;
-  grpc_metadata_array server_metadata_;
 };
 
 template <typename ReqT, typename RepT, bool sync>

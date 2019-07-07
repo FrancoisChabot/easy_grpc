@@ -11,23 +11,15 @@ class Test_async_impl {
   using service_type = tests::TestServerStreamingService;
 
   ::rpc::Stream_future<::tests::TestReply> TestMethod(::tests::TestRequest) {
-  std::cout << "sup\n";
     ::tests::TestReply val;
 
     ::rpc::Stream_promise<::tests::TestReply> rep;
     auto result = rep.get_future();
 
-  std::cout << "a\n";
     rep.push(val);
-      std::cout << "b\n";
     rep.push(val);
-      std::cout << "c\n";
     rep.push(val);
-
-  std::cout << "d\n";
     rep.complete();
-
-  std::cout << "yo\n";
     return result;
   }
 };

@@ -15,7 +15,7 @@
 #ifndef EASY_GRPC_SERVER_SERVICE_IMPL_INCLUDED_H
 #define EASY_GRPC_SERVER_SERVICE_IMPL_INCLUDED_H
 
-//#include "easy_grpc/server/methods/bidir_streaming.h"
+#include "easy_grpc/server/methods/bidir_streaming.h"
 #include "easy_grpc/server/methods/server_streaming.h"
 #include "easy_grpc/server/methods/client_streaming.h"
 #include "easy_grpc/server/methods/unary.h"
@@ -44,8 +44,7 @@ auto make_client_streaming_method(const char* name, CbT cb) {
 
 template <typename CbT>
 auto make_bidir_streaming_method(const char* name, CbT cb) {
-  return nullptr;
-  //return std::make_unique<Bidir_streaming_method<CbT>>(name, std::move(cb));
+  return std::make_unique<Method_impl<Bidir_streaming_call_handler, CbT>>(name, std::move(cb));
 }
 
 

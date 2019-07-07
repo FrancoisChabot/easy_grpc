@@ -10,15 +10,23 @@ class Test_async_impl {
  public:
   using service_type = tests::TestBidirStreamingService;
 
-  void TestMethod(::easy_grpc::Server_reader<::tests::TestRequest> req, ::easy_grpc::Server_writer<::tests::TestReply> rep) {
-    std::shared_ptr<int> count = std::make_shared<int>(0);
+  ::easy_grpc::Stream_future<::tests::TestReply> TestMethod(::easy_grpc::Stream_future<::tests::TestRequest> req) {
+    auto rep = std::make_shared<::easy_grpc::Stream_promise<::tests::TestReply>>();
+    auto rep_fut = rep->get_future();
 
-    return req.for_each([count, rep](::tests::TestRequest) mutable {
-        ::tests::TestReply reply;
-        rep.push(reply);
-      }).finally([count, rep](aom::expected<void>) mutable {
-        rep.finish();
-      });
+    req.for_each([rep](::tests::TestRequest) mutable {
+      ::tests::TestReply reply;
+      rep->push(reply);
+    }).finally([rep](aom::expected<void> status) mutable {
+      if(status.has_value()) {
+        rep->complete();
+      }
+      else {
+        rep->set_exception(status.error());
+      }
+    });
+
+    return rep_fut;
   }
 };
 }
@@ -60,6 +68,6 @@ TEST(bidir_streaming, simple_call) {
   for(int i = 0 ; i < 6; ++i) {
     req_stream.push(req);
   }
-  req_stream.finish();
+  req_stream.complete();
   EXPECT_EQ(all_done.get(), 6);
 }

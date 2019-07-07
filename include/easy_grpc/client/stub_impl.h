@@ -501,8 +501,8 @@ template<typename RepT, typename ReqT>
 class Bidir_streaming_call_session final 
   : public Completion_callback {
 public:
-  Bidir_streaming_call_session(grpc_call* call) 
-    : call_(call) {
+  Bidir_streaming_call_session(grpc_call* call, Stream_future<ReqT> req) 
+    : req_(std::move(req)), call_(call) {
     grpc_metadata_array_init(&trailing_metadata_);
     grpc_metadata_array_init(&server_metadata_);
 
@@ -591,7 +591,7 @@ public:
 
   bool exec(bool, bool write_op) noexcept override {
     std::unique_lock l(mtx_);
-
+    batch_in_flight_ = false;
     if(handshaking) {
       handshaking = false;
 
@@ -609,10 +609,10 @@ public:
         assert(false);
       }
 
-      l.release();
+      l.unlock();
 
       // Get ready to send requests
-      req_.get_future().for_each([this](ReqT req){
+      req_.for_each([this](ReqT req){
         std::lock_guard l(mtx_);
 
         auto buffer = serialize(req);
@@ -671,11 +671,10 @@ public:
         rep_.complete();
       }
     }
-
     return false;
   }
 
-  Stream_promise<ReqT> req_;
+  Stream_future<ReqT> req_;
   Stream_promise<RepT> rep_;
 
   // I really wish we could do this without a mutex, somehow...
@@ -706,9 +705,10 @@ std::tuple<Stream_promise<ReqT>, Stream_future<RepT>> start_bidir_streaming_call
       channel->handle(), nullptr, GRPC_PROPAGATE_DEFAULTS,
       options.completion_queue->handle(), tag, options.deadline, nullptr);
 
-  auto call_session = new Bidir_streaming_call_session<RepT, ReqT>(call);  
+  Stream_promise<ReqT> req;
+  auto call_session = new Bidir_streaming_call_session<RepT, ReqT>(call, req.get_future());  
 
-  return {std::move(call_session->req_), call_session->rep_.get_future()};
+  return {std::move(req), call_session->rep_.get_future()};
 }
 
 

@@ -20,10 +20,7 @@ class Test_sync_impl {
 }  // namespace
 
 TEST(channel, simple_connection) {
-  std::cerr << "AAA\n";
   rpc::Environment env;
-  std::cerr << "BBB\n";
-
   ::tests::TestRequest req;
   req.set_name("dude");
 
@@ -35,8 +32,6 @@ TEST(channel, simple_connection) {
               {sync_srv.queues.begin(), sync_srv.queues.end()})
           .with_service(::tests::TestService::get_config(sync_srv))
           .with_listening_port("127.0.0.1:0", {}, &server_port));
-
-  std::cerr << "CCCC\n";
   
   rpc::Completion_queue client_queue;
   rpc::client::Unsecure_channel channel(
