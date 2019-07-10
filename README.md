@@ -63,6 +63,10 @@ Key points:
 
 All you need is a compliant C++17 compiler, and grpc itself. It should be possible to back-port this library to C++14 if there is enough demand for it.
 
+### Futures
+
+A lot of heavy lifting is done through a dedicated [Futures library](https://github.com/FrancoisChabot/variadic_future). It's powerful, fast and straightforward to use. Please refer to that project for the API details of these objects.
+
 The Dockerfile contained in this project contains an image that should have everything you need.
 
 ## Current State
@@ -76,8 +80,8 @@ The Dockerfile contained in this project contains an image that should have ever
 - [x] Server Unary-stream handling
 - [x] Server Stream-Unary handling
 - [x] Server Stream-Stream handling
-- [ ] Reflection
-
+- [x] Reflection
+- [ ] credentials
 Next steps:
 - Get second and third opinions on the API before proceeding.
 - Big cleanup and documentation pass.
