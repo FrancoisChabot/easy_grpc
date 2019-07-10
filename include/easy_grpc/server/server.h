@@ -53,6 +53,8 @@ class Config {
                               std::shared_ptr<Credentials> creds = {},
                               int* bound_port = nullptr);
 
+  const std::vector<Service_config>& get_services() const;
+
  private:
   struct Port {
     std::string addr;

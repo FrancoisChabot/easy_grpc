@@ -42,5 +42,5 @@ add_executable(hello_client_02
   client_main.cpp
 )
 
-target_link_libraries(hello_server_02 hello_proto_02)
+target_link_libraries(hello_server_02 hello_proto_02 easy_grpc_reflection easy_grpc protobuf::libprotobuf grpc.a)
 target_link_libraries(hello_client_02 hello_proto_02)

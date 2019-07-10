@@ -1,4 +1,5 @@
 #include "easy_grpc/easy_grpc.h"
+#include "easy_grpc_reflection/reflection.h"
 #include "generated/hello.egrpc.pb.h"
 
 namespace rpc = easy_grpc;
@@ -57,9 +58,9 @@ int main() {
 
   Hello_impl service;
 
-  rpc::server::Server server = rpc::server::Config()
+  rpc::server::Config cfg;
     // Methods without any listenings queue will will use this set instead.
-    .with_default_listening_queues({server_cqs.begin(), server_cqs.end()})
+    cfg.with_default_listening_queues({server_cqs.begin(), server_cqs.end()})
 
     // Use our service
     .with_service(HelloService::get_config(service))
@@ -68,6 +69,9 @@ int main() {
     .with_listening_port("0.0.0.0:12345");
 
 
+  easy_grpc::reflection::enable_reflection(cfg);
+
+  rpc::server::Server server(cfg);
   // Please replace this with proper signal handling (gpr might have what we need here...)
   while(1) {
     std::this_thread::sleep_for(std::chrono::minutes(2));

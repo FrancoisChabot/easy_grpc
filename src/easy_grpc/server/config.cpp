@@ -40,6 +40,10 @@ Config& Config::with_listening_port(std::string addr,
   return *this;
 }
 
+const std::vector<Service_config>& Config::get_services() const {
+  return service_cfgs_;
+}
+
 }  // namespace server
 
 }  // namespace easy_grpc

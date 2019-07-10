@@ -99,7 +99,7 @@ std::vector<std::string> tokenize(const std::string& str, char c) {
     auto next = str.find(c);
 
     while (next != std::string::npos) {
-      result.push_back(str.substr(current, next));
+      result.push_back(str.substr(current, next-current));
       current = next + 1;
       next = str.find(c, current);
     }
@@ -120,7 +120,7 @@ void generate_service_header(const ServiceDescriptor* service,
                              std::ostream& dst) {
  
   auto name = service->name();
-
+  auto full_name = service->full_name();
   auto method_name_cste = [&](auto method) {
     return std::string("k") + name + "_" + method->name() + "_name";
   };
@@ -243,7 +243,7 @@ void generate_service_header(const ServiceDescriptor* service,
 
   dst << "  template<typename ImplT>\n"
       << "  static ::easy_grpc::server::Service_config get_config(ImplT& impl) {\n"
-      << "    ::easy_grpc::server::Service_config result(\""<< name <<"\");\n\n";
+      << "    ::easy_grpc::server::Service_config result(\""<< full_name <<"\");\n\n";
   for (int i = 0; i < service->method_count(); ++i) {
     auto method = service->method(i);
     auto input = method->input_type();

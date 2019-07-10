@@ -63,6 +63,8 @@ install(TARGETS easy_grpc
   RUNTIME  DESTINATION bin
 )
 
+add_subdirectory(src/easy_grpc_reflection)
+
 if(EASY_GRPC_BUILD_EXAMPLES)
   find_package(Protobuf REQUIRED)
 
