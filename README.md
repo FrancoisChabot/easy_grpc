@@ -70,12 +70,13 @@ The Dockerfile contained in this project contains an image that should have ever
 - [x] protoc plugin
 - [x] Client Unary-Unary calls
 - [x] Server Unary-Unary handling
-- [ ] Client Unary-stream calls
+- [x] Client Unary-stream calls
 - [x] Client Stream-Unary calls
-- [ ] Client Stream-Stream calls
+- [x] Client Stream-Stream calls
 - [x] Server Unary-stream handling
-- [ ] Server Stream-Unary handling
-- [ ] Server Stream-Stream handling
+- [x] Server Stream-Unary handling
+- [x] Server Stream-Stream handling
+- [ ] Reflection
 
 Next steps:
 - Get second and third opinions on the API before proceeding.

@@ -115,7 +115,6 @@ TEST(binary_protocol, simple_rpc) {
     Custom_service::Stub stub(&channel);
 
     auto result = stub.DoWork({4}).get();
-
     EXPECT_EQ(result.a, 4);
     EXPECT_EQ(result.b, 8);
     EXPECT_EQ(result.c, 16);

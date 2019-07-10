@@ -12,10 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+/// \file
+/// Configuration
+
 #ifndef AOM_VARIADIC_FUTURE_CONFIG_INCLUDED_H
 #define AOM_VARIADIC_FUTURE_CONFIG_INCLUDED_H
 
-#include <memory>
+#define AOM_VARFUT_VERSION_MAJOR 0
+#define AOM_VARFUT_VERSION_MINOR 3
+#define AOM_VARFUT_VERSION_PATCH 1
+
 // **************************** std::expected ***************************//
 
 // Change this if you want to use some other expected type.
@@ -38,24 +44,6 @@ using unexpected = nonstd::unexpected_type<std::exception_ptr>;
 
 //#define VAR_FUTURE_NO_UB
 
-namespace aom {
-// N.B. 1 vtable + 1 destination storage pointer + 1 function pointer.
-static constexpr std::size_t var_fut_default_min_sbo_size = 3 * sizeof(void*);
-
-// A future's shared state can contain either a value, an error, or
-// callbacks to invoke. When sizeof(value) is large, storing callbacks
-// in small-object-optimization storage is trivial.
-//
-// However, when sizeof(value) is very small, like in a future<void>,
-// most callbacks would end up on the heap, so we make future_storage a
-// bit larger than strictly necessary in those cases to accomodate.
-//
-// This variable thus represents the size handlers guaranteed to be stored
-// in SBO storage, which by default matches Future<void>::then([](){});
-//
-// The default value is used in tests, so it should be left alone.
-static constexpr std::size_t var_fut_min_sbo_size =
-    var_fut_default_min_sbo_size;
-}  // namespace aom
+namespace aom {}  // namespace aom
 
 #endif

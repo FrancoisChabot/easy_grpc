@@ -10,14 +10,17 @@ class Test_async_impl {
  public:
   using service_type = tests::TestServerStreamingService;
 
-  void TestMethod(::tests::TestRequest, ::rpc::Server_writer<::tests::TestReply> rep) {
+  ::rpc::Stream_future<::tests::TestReply> TestMethod(::tests::TestRequest) {
     ::tests::TestReply val;
 
-    rep.push(val);
-    rep.push(val);
-    rep.push(val);
+    ::rpc::Stream_promise<::tests::TestReply> rep;
+    auto result = rep.get_future();
 
-    rep.finish();
+    rep.push(val);
+    rep.push(val);
+    rep.push(val);
+    rep.complete();
+    return result;
   }
 };
 }

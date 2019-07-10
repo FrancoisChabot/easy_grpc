@@ -24,8 +24,7 @@ int main() {
   for(int i = 0 ; i < 100; ++i) {
     req_stream.push(req);
   }
-  req_stream.finish();
-
+  req_stream.complete();
 
   try {
     std::cout << rep.get().greeting() << "\n...\n";

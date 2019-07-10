@@ -36,10 +36,10 @@ class Service_config {
     constexpr bool c_streaming = is_server_reader_v<typename cb_traits::template arg<0>::type>;
     // This is the check we WANT, but it's not that simple...
     // constexpr bool s_streaming = cb_traits::arity > 1 && is_server_writer_v<typename cb_traits::template arg<1>::type>;
-    constexpr bool s_streaming = cb_traits::arity > 1;
+    constexpr bool s_streaming = is_server_writer_v<std::decay_t<typename cb_traits::result_type>>;
 
     if constexpr(c_streaming && s_streaming) {
-
+      methods_.emplace_back(detail::make_bidir_streaming_method(name, std::move(cb)));
     }
     else if constexpr(c_streaming) {
       methods_.emplace_back(detail::make_client_streaming_method(name, std::move(cb)));
@@ -50,7 +50,6 @@ class Service_config {
     else {
       methods_.emplace_back(detail::make_unary_method(name, std::move(cb)));
     }
-
   }
 
   const std::vector<std::unique_ptr<detail::Method>>& methods() const {

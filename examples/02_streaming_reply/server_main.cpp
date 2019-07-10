@@ -30,19 +30,26 @@ public:
   }
 
   // Says Goodbye
-  void SpamHello(::pkg::HelloRequest req, ::easy_grpc::Server_writer<::pkg::HelloReply> rep) {
+  ::easy_grpc::Stream_future<::pkg::HelloReply>  SpamHello(::pkg::HelloRequest req) {
     if(req.name() == "") {
       throw rpc::error::invalid_argument("must provide name");
     }
 
-    HelloReply rep_val;
-    rep_val.set_greeting(std::string("Goodbye " + req.name()));
-    for(int i = 0 ; i < 100; ++i ) {
-      rep.push(rep_val);
-    }
+    ::easy_grpc::Stream_promise<::pkg::HelloReply> rep;
+    auto result = rep.get_future();
 
-    // If rep is destroyed before being finished, the RPC will be considered failed.
-    rep.finish();
+    std::thread worker([rep=std::move(rep), req=std::move(req)]() mutable {
+      HelloReply rep_val;
+      rep_val.set_greeting(std::string("Goodbye " + req.name()));
+      for(int i = 0 ; i < 100; ++i ) {
+        rep.push(rep_val);
+      }
+      rep.complete();
+    });
+
+    worker.detach();
+
+    return result;
   }
 };
 

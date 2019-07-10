@@ -152,13 +152,13 @@ void generate_service_header(const ServiceDescriptor* service,
         break;
       case Method_mode::CLIENT_STREAM:
         dst << "  virtual ::easy_grpc::Future<" << class_name(output) << "> "
-            << method->name() << "(::easy_grpc::Server_reader<" << class_name(input) << ">) = 0;\n";
+            << method->name() << "(::easy_grpc::Stream_future<" << class_name(input) << ">) = 0;\n";
         break;
       case Method_mode::SERVER_STREAM:
-        dst << "  virtual void " << method->name() << "(" << class_name(input) << ", ::easy_grpc::Server_writer<" << class_name(output) << ">) = 0;\n";
+        dst << "  virtual ::easy_grpc::Stream_future<" << class_name(output) << "> " << method->name() << "(" << class_name(input) << ") = 0;\n";
         break;
       case Method_mode::BIDIR_STREAM:
-        dst << "  virtual void " << method->name() << "(::easy_grpc::Server_reader<" << class_name(input) << ">, ::easy_grpc::Server_writer<" << class_name(output) << ">) = 0;\n";
+        dst << "  virtual ::easy_grpc::Stream_future<" << class_name(output) << "> " << method->name() << "(::easy_grpc::Stream_future<" << class_name(input) << ">) = 0;\n";
         break;
     }
   }
@@ -181,18 +181,17 @@ void generate_service_header(const ServiceDescriptor* service,
           << ", ::easy_grpc::client::Call_options={}) = 0;\n";
         break;
       case Method_mode::CLIENT_STREAM:
-        dst << "    virtual std::tuple<::easy_grpc::Client_writer<"<< class_name(input)<<">, ::easy_grpc::Future<" << class_name(output) << ">> "
+        dst << "    virtual std::tuple<::easy_grpc::Stream_promise<"<< class_name(input)<<">, ::easy_grpc::Future<" << class_name(output) << ">> "
           << method->name() << "(::easy_grpc::client::Call_options={}) = 0;\n";
         break;
       case Method_mode::SERVER_STREAM:
-        dst << "    virtual ::easy_grpc::Client_reader<" << class_name(output) << "> "
+        dst << "    virtual ::easy_grpc::Stream_future<" << class_name(output) << "> "
           << method->name() << "(" << class_name(input)
           << ", ::easy_grpc::client::Call_options={}) = 0;\n";
         break;
       case Method_mode::BIDIR_STREAM:
-        dst << "    virtual ::easy_grpc::Client_reader<" << class_name(output) << "> "
-          << method->name() << "(::easy_grpc::Client_writer<" << class_name(input)
-          << ">, ::easy_grpc::client::Call_options={}) = 0;\n";
+        dst << "    virtual std::tuple<::easy_grpc::Stream_promise<"<< class_name(input)<<">, ::easy_grpc::Stream_future<" << class_name(output) << ">> "
+          << method->name() << "(::easy_grpc::client::Call_options={}) = 0;\n";
         break;
     }
   }
@@ -216,18 +215,17 @@ void generate_service_header(const ServiceDescriptor* service,
           << ", ::easy_grpc::client::Call_options={}) override;\n";
         break;
       case Method_mode::CLIENT_STREAM:
-        dst << "    std::tuple<::easy_grpc::Client_writer<"<< class_name(input)<<">, ::easy_grpc::Future<" << class_name(output) << ">> "
+        dst << "    std::tuple<::easy_grpc::Stream_promise<"<< class_name(input)<<">, ::easy_grpc::Future<" << class_name(output) << ">> "
           << method->name() << "(::easy_grpc::client::Call_options={}) override;\n";
         break;
       case Method_mode::SERVER_STREAM:
-        dst << "    ::easy_grpc::Client_reader<" << class_name(output) << "> "
+        dst << "    ::easy_grpc::Stream_future<" << class_name(output) << "> "
           << method->name() << "(" << class_name(input)
           << ", ::easy_grpc::client::Call_options={}) override;\n";
         break;
       case Method_mode::BIDIR_STREAM:
-        dst << "    ::easy_grpc::Client_reader<" << class_name(output) << "> "
-          << method->name() << "(::easy_grpc::Client_writer<" << class_name(input)
-          << ">, ::easy_grpc::client::Call_options={}) override;\n";
+        dst << "    std::tuple<::easy_grpc::Stream_promise<"<< class_name(input)<<">, ::easy_grpc::Stream_future<" << class_name(output) << ">> "
+          << method->name() << "(::easy_grpc::client::Call_options={}) override;\n";
         break;
     }
   }
@@ -258,15 +256,15 @@ void generate_service_header(const ServiceDescriptor* service,
       break;
     case Method_mode::CLIENT_STREAM:
       dst << "    result.add_method("
-        << method_name_cste(method) << ", [&impl](::easy_grpc::Server_reader<" << class_name(input) << "> req){return impl." << method->name() << "(std::move(req));});\n"; 
+        << method_name_cste(method) << ", [&impl](::easy_grpc::Stream_future<" << class_name(input) << "> req){return impl." << method->name() << "(std::move(req));});\n"; 
       break;
     case Method_mode::SERVER_STREAM:
       dst << "    result.add_method("
-        << method_name_cste(method) << ", [&impl](" << class_name(input) << " req, ::easy_grpc::Server_writer<"<<class_name(output) <<"> rep){impl." << method->name() << "(std::move(req), std::move(rep));});\n"; 
+        << method_name_cste(method) << ", [&impl](" << class_name(input) << " req){return impl." << method->name() << "(std::move(req));});\n"; 
       break;
     case Method_mode::BIDIR_STREAM:
       dst << "    result.add_method("
-        << method_name_cste(method) << ", [&impl](::easy_grpc::Server_reader<" << class_name(input) << "> req, ::easy_grpc::Server_writer<"<<class_name(output) <<"> rep){impl." << method->name() << "(std::move(req), std::move(rep));});\n"; 
+        << method_name_cste(method) << ", [&impl](::easy_grpc::Stream_future<" << class_name(input) << "> req){return impl." << method->name() << "(std::move(req));});\n"; 
       break;
     }
 
@@ -328,7 +326,7 @@ void generate_service_source(const ServiceDescriptor* service,
         << "}\n\n";
       break;
     case Method_mode::CLIENT_STREAM:
-      dst << "std::tuple<::easy_grpc::Client_writer<"<< class_name(input)<<">, ::easy_grpc::Future<" << class_name(output) << ">> "
+      dst << "std::tuple<::easy_grpc::Stream_promise<"<< class_name(input)<<">, ::easy_grpc::Future<" << class_name(output) << ">> "
           << name << "::Stub::" << method->name() << "(::easy_grpc::client::Call_options options) {\n";
  
       dst << "  if(!options.completion_queue) { options.completion_queue = "
@@ -339,7 +337,7 @@ void generate_service_source(const ServiceDescriptor* service,
           << "}\n\n";
       break;
     case Method_mode::SERVER_STREAM:
-      dst << "::easy_grpc::Client_reader<" << class_name(output) << "> " << name
+      dst << "::easy_grpc::Stream_future<" << class_name(output) << "> " << name
         << "::Stub::" << method->name() << "(" << class_name(input)
         << " req, ::easy_grpc::client::Call_options options) {\n"
         << "  if(!options.completion_queue) { options.completion_queue = "
@@ -350,14 +348,13 @@ void generate_service_source(const ServiceDescriptor* service,
         << "}\n\n";
       break;
     case Method_mode::BIDIR_STREAM:
-      dst << "::easy_grpc::Client_reader<" << class_name(output) << "> " << name
-        << "::Stub::" << method->name() << "(::easy_grpc::Client_writer<" << class_name(input)
-        << "> req, ::easy_grpc::client::Call_options options) {\n"
+      dst << "std::tuple<::easy_grpc::Stream_promise<"<< class_name(input)<<">, ::easy_grpc::Stream_future<" << class_name(output) << ">> " << name
+        << "::Stub::" << method->name() << "(::easy_grpc::client::Call_options options) {\n"
         << "  if(!options.completion_queue) { options.completion_queue = "
            "default_queue_; }\n"
         << "  return ::easy_grpc::client::start_bidir_streaming_call<"
-        << class_name(output) << ">(channel_, " << method->name()
-        << "_tag_, std::move(req), std::move(options));\n"
+        << class_name(output) << ", " << class_name(input) << ">(channel_, " << method->name()
+        << "_tag_, std::move(options));\n"
         << "}\n\n";
       break;
     }

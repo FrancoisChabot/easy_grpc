@@ -107,7 +107,7 @@ template <typename QueueT, typename CbT>
 
   detail::Storage_ptr<result_storage_t> result;
   result.allocate(allocator());
-  
+
   storage_->template set_handler<handler_t>(&queue, result, std::move(cb));
   storage_.reset();
 
@@ -192,7 +192,7 @@ Basic_future<Alloc, Ts...> flatten(
   detail::Storage_ptr<storage_type> storage;
 
   storage.allocate(rhs.allocator());
-  
+
   rhs.finally([storage](expected<std::tuple<Ts...>> e) mutable {
     if (e.has_value()) {
       storage->finish(std::move(*e));
@@ -206,14 +206,26 @@ Basic_future<Alloc, Ts...> flatten(
 
 /**
  * @brief Permits a callback to produce a higher-order future.
- * 
- * @tparam Ts 
- * @param args 
- * @return auto 
+ *
+ * @tparam Ts
+ * @param args
+ * @return auto
  */
-template<typename... Ts>
+template <typename... Ts>
 auto segmented(Ts&&... args) {
-  return detail::Segmented_callback_result<std::decay_t<Ts>...>{ std::make_tuple(std::forward<Ts>(args)...)};
+  return detail::Segmented_callback_result<std::decay_t<Ts>...>{
+      std::make_tuple(std::forward<Ts>(args)...)};
+}
+
+/**
+ * @brief Get the version of the library.
+ * 
+ * @return std::string 
+ */
+inline std::string varfut_lib_version_string() {
+  return std::to_string(AOM_VARFUT_VERSION_MAJOR) + "."  
+       + std::to_string(AOM_VARFUT_VERSION_MINOR) + "." 
+       + std::to_string(AOM_VARFUT_VERSION_PATCH);
 }
 
 }  // namespace aom

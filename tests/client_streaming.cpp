@@ -10,7 +10,7 @@ class Test_async_impl {
  public:
   using service_type = tests::TestClientStreamingService;
 
-  ::easy_grpc::Future<::tests::TestReply> TestMethod(::easy_grpc::Server_reader<::tests::TestRequest> reader) {
+  ::easy_grpc::Future<::tests::TestReply> TestMethod(::easy_grpc::Stream_future<::tests::TestRequest> reader) {
     std::shared_ptr<int> count = std::make_shared<int>(0);
     return reader.for_each([count](::tests::TestRequest) mutable {
         *count += 1;
@@ -53,6 +53,6 @@ TEST(client_streaming, simple_call) {
   for(int i = 0 ; i < 6; ++i) {
     req_stream.push(req);
   }
-  req_stream.finish();
+  req_stream.complete();
   EXPECT_EQ(rep_fut.get().count(), 6);
 }
