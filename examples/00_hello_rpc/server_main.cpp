@@ -58,20 +58,20 @@ int main() {
 
   Hello_impl service;
 
-  rpc::server::Config cfg;
-    // Methods without any listenings queue will will use this set instead.
-    cfg.with_default_listening_queues({server_cqs.begin(), server_cqs.end()})
+;
 
+  rpc::server::Server server( rpc::server::Config()
+    // 
+    .add_default_listening_queues({server_cqs.begin(), server_cqs.end()})
     // Use our service
-    .with_service(HelloService::get_config(service))
+    .add_service(HelloService::get_config(service))
 
     // Open an unsecured port
-    .with_listening_port("0.0.0.0:12345");
+    .add_listening_port("0.0.0.0:12345")
 
+    // enable reflection
+    .add_feature(easy_grpc::Reflection_feature()));
 
-  easy_grpc::reflection::enable_reflection(cfg);
-
-  rpc::server::Server server(cfg);
   // Please replace this with proper signal handling (gpr might have what we need here...)
   while(1) {
     std::this_thread::sleep_for(std::chrono::minutes(2));

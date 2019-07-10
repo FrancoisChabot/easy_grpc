@@ -23,21 +23,38 @@ namespace easy_grpc {
 
 namespace server {
 
-Config& Config::with_default_listening_queues(Completion_queue_set queues) {
+Config& Config::add_default_listening_queues(Completion_queue_set queues) & {
   default_queues_ = std::move(queues);
   return *this;
 }
 
-Config& Config::with_service(Service_config cfg) {
+Config&& Config::add_default_listening_queues(Completion_queue_set queues) && {
+  default_queues_ = std::move(queues);
+  return std::move(*this);
+}
+
+Config& Config::add_service(Service_config cfg) & {
   service_cfgs_.push_back(std::move(cfg));
   return *this;
 }
 
-Config& Config::with_listening_port(std::string addr,
+Config&& Config::add_service(Service_config cfg) && {
+  service_cfgs_.push_back(std::move(cfg));
+  return std::move(*this);
+}
+
+Config& Config::add_listening_port(std::string addr,
                                     std::shared_ptr<Credentials> creds,
-                                    int* bound_port) {
+                                    int* bound_port) & {
   ports_.push_back({std::move(addr), creds, bound_port});
   return *this;
+}
+
+Config&& Config::add_listening_port(std::string addr,
+                                    std::shared_ptr<Credentials> creds,
+                                    int* bound_port) && {
+  ports_.push_back({std::move(addr), creds, bound_port});
+  return std::move(*this);
 }
 
 const std::vector<Service_config>& Config::get_services() const {

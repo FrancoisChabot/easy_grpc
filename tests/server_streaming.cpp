@@ -37,10 +37,10 @@ TEST(server_streaming, simple_call) {
   int server_port = 0;
   rpc::server::Server server =
       rpc::server::Config()
-          .with_default_listening_queues(
+          .add_default_listening_queues(
               {server_queues.begin(), server_queues.end()})
-          .with_service(tests::TestServerStreamingService::get_config(async_srv))
-          .with_listening_port("127.0.0.1:0", {}, &server_port);
+          .add_service(tests::TestServerStreamingService::get_config(async_srv))
+          .add_listening_port("127.0.0.1:0", {}, &server_port);
 
   EXPECT_NE(0, server_port);
   

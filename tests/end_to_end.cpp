@@ -32,12 +32,12 @@ TEST(test_easy_grpc, simple_rpc) {
   Test_sync_impl sync_srv;
 
   int server_port = 0;
-  rpc::server::Server server =
+  rpc::server::Server server = std::move(
       rpc::server::Config()
-          .with_default_listening_queues(
+          .add_default_listening_queues(
               {server_queues.begin(), server_queues.end()})
-          .with_service(sync_srv)
-          .with_listening_port("127.0.0.1:0", {}, &server_port);
+          .add_service(sync_srv)
+          .add_listening_port("127.0.0.1:0", {}, &server_port));
 
   EXPECT_NE(0, server_port);
 
@@ -65,12 +65,12 @@ TEST(test_easy_grpc, big_volume) {
   Test_sync_impl sync_srv;
 
   int server_port = 0;
-  rpc::server::Server server =
+  rpc::server::Server server = std::move(
       rpc::server::Config()
-          .with_default_listening_queues(
+          .add_default_listening_queues(
               {server_queues.begin(), server_queues.end()})
-          .with_service(sync_srv)
-          .with_listening_port("127.0.0.1:0", {}, &server_port);
+          .add_service(sync_srv)
+          .add_listening_port("127.0.0.1:0", {}, &server_port));
 
   EXPECT_NE(0, server_port);
 
