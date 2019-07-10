@@ -32,6 +32,7 @@ TEST(channel, simple_connection) {
               {sync_srv.queues.begin(), sync_srv.queues.end()})
           .add_service(::tests::TestService::get_config(sync_srv))
           .add_listening_port("127.0.0.1:0", {}, &server_port)));
+
   
   rpc::Completion_queue client_queue;
   rpc::client::Unsecure_channel channel(

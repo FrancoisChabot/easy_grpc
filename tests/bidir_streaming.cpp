@@ -48,6 +48,7 @@ TEST(bidir_streaming, simple_call) {
           .add_service(tests::TestBidirStreamingService::get_config(async_srv))
           .add_listening_port("127.0.0.1:0", {}, &server_port));
 
+
   EXPECT_NE(0, server_port);
   
   rpc::client::Unsecure_channel channel(
