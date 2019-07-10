@@ -12,10 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+/// \file
+/// Configuration
+
 #ifndef AOM_VARIADIC_FUTURE_CONFIG_INCLUDED_H
 #define AOM_VARIADIC_FUTURE_CONFIG_INCLUDED_H
 
-#include <memory>
+#define AOM_VARFUT_VERSION_MAJOR 0
+#define AOM_VARFUT_VERSION_MINOR 3
+#define AOM_VARFUT_VERSION_PATCH 1
+
 // **************************** std::expected ***************************//
 
 // Change this if you want to use some other expected type.
@@ -38,8 +44,6 @@ using unexpected = nonstd::unexpected_type<std::exception_ptr>;
 
 //#define VAR_FUTURE_NO_UB
 
-namespace aom {
-
-}  // namespace aom
+namespace aom {}  // namespace aom
 
 #endif

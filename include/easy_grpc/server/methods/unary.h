@@ -46,7 +46,7 @@ public:
     }
   }
 
-  bool exec(bool, bool) noexcept override {
+  bool exec(bool, std::bitset<4>) noexcept override {
     return true;
   }
 

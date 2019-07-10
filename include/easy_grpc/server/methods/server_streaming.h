@@ -111,8 +111,8 @@ public:
     }
   }
 
-  bool exec(bool, bool is_end) noexcept override {
-    if(is_end) {
+  bool exec(bool, std::bitset<4> flags) noexcept override {
+    if(flags.test(0)) {
       return true;
     }
 
@@ -134,7 +134,7 @@ public:
     op_send_status(ops[1]);
 
     auto status =
-      grpc_call_start_batch(call_, ops.data(), ops.size(), completion_tag(true).data, nullptr);
+      grpc_call_start_batch(call_, ops.data(), ops.size(), completion_tag(1).data, nullptr);
 
     if(status != GRPC_CALL_OK) {
       std::cerr << grpc_call_error_to_string(status) << "\n";

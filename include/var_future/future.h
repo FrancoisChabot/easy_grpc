@@ -15,10 +15,14 @@
 #ifndef AOM_VARIADIC_FUTURE_INCLUDED_H
 #define AOM_VARIADIC_FUTURE_INCLUDED_H
 
+/// \file
+/// Futures
+
 #include "var_future/config.h"
 #include "var_future/impl/storage_decl.h"
 
 #include <memory>
+#include <string>
 
 namespace aom {
 
@@ -278,7 +282,7 @@ class Basic_promise {
  private:
   bool future_created_ = false;
   bool value_assigned_ = false;
-   
+
   detail::Storage_ptr<storage_type> storage_;
 
   Basic_promise(const Basic_promise&) = delete;
@@ -328,6 +332,7 @@ Basic_future<Alloc, Ts...> flatten(Basic_future<Alloc, std::tuple<Ts...>>& rhs);
 template <typename... Ts>
 auto segmented(Ts&&... args);
 
+inline std::string varfut_lib_version_string();
 }  // namespace aom
 
 #include "var_future/impl/async.h"

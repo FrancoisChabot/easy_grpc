@@ -15,6 +15,9 @@
 #ifndef AOM_VARIADIC_STREAM_FUTURE_INCLUDED_H
 #define AOM_VARIADIC_STREAM_FUTURE_INCLUDED_H
 
+/// \file
+/// Streams
+
 #include "var_future/config.h"
 
 #include "var_future/future.h"
@@ -25,11 +28,14 @@
 
 namespace aom {
 
+template <typename Alloc, typename... Ts>
+class Basic_stream_promise;
+
 /**
- * @brief 
- * 
- * @tparam Alloc 
- * @tparam Ts 
+ * @brief Represents a stream of values that will be eventually available.
+ *
+ * @tparam Alloc The rebindable allocator to use.
+ * @tparam Ts The types making up the stream fields.
  */
 template <typename Alloc, typename... Ts>
 class Basic_stream_future {
@@ -39,70 +45,71 @@ class Basic_stream_future {
   using fullfill_type = typename storage_type::fullfill_type;
 
   /**
-  * @brief Construct a new Basic_stream_future object
-  * 
-  */
+   * @brief Default construction.
+   *
+   */
   Basic_stream_future() = default;
 
   /**
-   * @brief Construct a new Basic_stream_future object
-   * 
+   * @brief Move construction.
+   *
    */
   Basic_stream_future(Basic_stream_future&&) = default;
 
   /**
-   * @brief 
-   * 
-   * @return Basic_stream_future& 
+   * @brief Move assignment.
+   *
+   * @return Basic_stream_future&
    */
   Basic_stream_future& operator=(Basic_stream_future&&) = default;
 
   /**
-   * @brief 
-   * 
-   * @tparam CbT 
-   * @param cb 
-   * @return Basic_future<Alloc, void> 
+   * @brief Invokes a callback on each value in the stream wherever they are
+   *        produced.
+   *
+   * @tparam CbT
+   * @param cb The callback to invoke on each value.
+   * @return Basic_future<Alloc, void> A future that will be completed at the
+   *                                   end of the stream.
    */
   template <typename CbT>
   [[nodiscard]] Basic_future<Alloc, void> for_each(CbT&& cb);
 
   /**
-   * @brief 
-   * 
-   * @tparam QueueT 
-   * @tparam CbT 
-   * @param queue 
-   * @param cb 
-   * @return Basic_future<Alloc, void> 
+   * @brief Posts the execution of a callback to a queue when values are
+   *        produced.
+   *
+   * @tparam QueueT
+   * @tparam CbT
+   * @param queue cb will be posted to that queue
+   * @param cb the callback to invoke.
+   * @return Basic_future<Alloc, void> A future that will be completed at the
+   *                                   end of the stream.
    */
   template <typename QueueT, typename CbT>
   [[nodiscard]] Basic_future<Alloc, void> for_each(QueueT& queue, CbT&& cb);
 
-  /**
-   * @brief Construct a new Basic_stream_future object
-   * 
-   * @param s 
-   */
-  explicit Basic_stream_future(detail::Storage_ptr<storage_type> s);
-
  private:
+  template <typename SubAlloc, typename... Us>
+  friend class Basic_stream_promise;
+
+  explicit Basic_stream_future(detail::Storage_ptr<storage_type> s);
   detail::Storage_ptr<storage_type> storage_;
 };
 
 /**
- * @brief 
- * 
- * @tparam Ts 
+ * @brief Basic_stream_future with default allocator.
+ *
+ * @tparam Ts
  */
 template <typename... Ts>
 using Stream_future = Basic_stream_future<std::allocator<void>, Ts...>;
 
 /**
- * @brief 
- * 
- * @tparam Alloc 
- * @tparam Ts 
+ * @brief
+ *
+ * @tparam Alloc
+ * @tparam Ts
  */
 template <typename Alloc, typename... Ts>
 class Basic_stream_promise {
@@ -113,55 +120,55 @@ class Basic_stream_promise {
   using fail_type = std::exception_ptr;
 
   /**
-   * @brief Construct a new Basic_stream_promise object
-   * 
+   * @brief Construct a new Basic_stream_promise object.
+   *
    */
   Basic_stream_promise();
 
   /**
    * @brief Construct a new Basic_stream_promise object
-   * 
+   *
    */
   Basic_stream_promise(Basic_stream_promise&&) = default;
 
   /**
-   * @brief 
-   * 
-   * @return Basic_stream_promise& 
+   * @brief
+   *
+   * @return Basic_stream_promise&
    */
   Basic_stream_promise& operator=(Basic_stream_promise&&) = default;
 
   /**
    * @brief Destroy the Basic_stream_promise object
-   * 
+   *
    */
   ~Basic_stream_promise();
 
   /**
    * @brief Get the future object
-   * 
-   * @param alloc 
-   * @return future_type 
+   *
+   * @param alloc
+   * @return future_type
    */
   future_type get_future(const Alloc& alloc = Alloc());
 
   /**
-   * @brief 
-   * 
-   * @tparam Us 
+   * @brief Add a datapoint to the stream.
+   *
+   * @tparam Us
    */
   template <typename... Us>
   void push(Us&&...);
 
   /**
-   * @brief 
-   * 
+   * @brief Closes the stream.
+   *
    */
   void complete();
 
   /**
-   * @brief Set the exception object
-   * 
+   * @brief Notify failure of the stream.
+   *
    */
   void set_exception(fail_type);
 
@@ -173,9 +180,9 @@ class Basic_stream_promise {
 };
 
 /**
- * @brief 
- * 
- * @tparam Ts 
+ * @brief
+ *
+ * @tparam Ts
  */
 template <typename... Ts>
 using Stream_promise = Basic_stream_promise<std::allocator<void>, Ts...>;

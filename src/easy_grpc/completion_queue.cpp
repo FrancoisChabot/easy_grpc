@@ -37,11 +37,12 @@ void Completion_queue::worker_main() {
         handle_, gpr_inf_future(GPR_CLOCK_REALTIME), nullptr);
     if (event.type == GRPC_OP_COMPLETE) {
       intptr_t tag_int = reinterpret_cast<intptr_t>(event.tag);
-      bool alternate = tag_int & 1;
-      Completion_callback* completion = reinterpret_cast<Completion_callback*>(tag_int & ~intptr_t(1));
+      std::bitset<4> flags(tag_int & 0x0F);
 
-      static_assert(noexcept(completion->exec(event.success, alternate)));
-      bool kill = completion->exec(event.success, alternate);
+      Completion_callback* completion = reinterpret_cast<Completion_callback*>(tag_int & ~intptr_t(0x0F));
+
+      static_assert(noexcept(completion->exec(event.success, flags)));
+      bool kill = completion->exec(event.success, flags);
       if (kill) {
         delete completion;
       }

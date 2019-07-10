@@ -39,7 +39,7 @@ class Method_listener : public Completion_callback {
     }
   }
 
-  bool exec(bool success, bool) noexcept override {
+  bool exec(bool success, std::bitset<4>) noexcept override {
     EASY_GRPC_TRACE(Method_listener, exec);
 
     if (success) {

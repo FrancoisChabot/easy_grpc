@@ -19,6 +19,7 @@
 
 #include <thread>
 #include <vector>
+#include <bitset>
 
 namespace easy_grpc {
 // A completion queue, with a matching thread that consumes from it.
@@ -36,13 +37,12 @@ class Completion_callback {
   virtual ~Completion_callback() {}
 
   // TODO: replace bool with an enum
-  virtual bool exec(bool success, bool alternate) noexcept = 0;
+  virtual bool exec(bool success, std::bitset<4> flags) noexcept = 0;
 
-  Completion_tag completion_tag(bool alternate=false) {
+  Completion_tag completion_tag(std::bitset<4> flags = {}) {
     intptr_t tag_val = reinterpret_cast<intptr_t>(this);
-    if(alternate) {
-      tag_val |= 1;
-    }
+    
+    tag_val |= flags.to_ulong();
 
     return reinterpret_cast<void*>(tag_val);
   }

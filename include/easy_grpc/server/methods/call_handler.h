@@ -105,7 +105,7 @@ std::tuple<grpc_status_code, grpc_slice> get_error_details(std::exception_ptr er
 }
 
 template<typename RepT>
-void send_unary_response(const RepT& rep, bool with_metadata, bool alt_tag) {
+void send_unary_response(const RepT& rep, bool with_metadata, std::bitset<4> flags) {
   std::array<grpc_op, 4> ops;
 
   std::size_t ops_count = 3;
@@ -122,7 +122,7 @@ void send_unary_response(const RepT& rep, bool with_metadata, bool alt_tag) {
   }
 
   auto call_status =
-      grpc_call_start_batch(call_, ops.data(), ops_count, completion_tag(alt_tag).data, nullptr);
+      grpc_call_start_batch(call_, ops.data(), ops_count, completion_tag(flags).data, nullptr);
 
   grpc_byte_buffer_destroy(buffer);  
 
@@ -132,7 +132,7 @@ void send_unary_response(const RepT& rep, bool with_metadata, bool alt_tag) {
   }
 }
 
-void send_failure(std::exception_ptr error, bool with_metadata, bool alt_tag) {
+void send_failure(std::exception_ptr error, bool with_metadata, std::bitset<4> flags) {
   std::array<grpc_op, 3> ops;
 
   std::size_t ops_count = 2;
@@ -147,7 +147,7 @@ void send_failure(std::exception_ptr error, bool with_metadata, bool alt_tag) {
   }
 
   auto call_status =
-      grpc_call_start_batch(call_, ops.data(), ops_count, completion_tag(alt_tag).data, nullptr);
+      grpc_call_start_batch(call_, ops.data(), ops_count, completion_tag(flags).data, nullptr);
 
   grpc_slice_unref(details);
 

@@ -37,7 +37,7 @@ class Bidir_streaming_call_handler : public Call_handler {
   
   std::mutex mtx_;
   bool finished_ = false;
-  bool batch_in_flight_ = false;
+  bool ready_to_send_ = false;
   std::queue<grpc_op> pending_ops_;
 
 public:
@@ -61,26 +61,28 @@ public:
         }
     });
 
-    std::array<grpc_op, 2> ops;
-    op_send_metadata(ops[0]);
-    op_recv_message(ops[1], &payload_);
+    {
+      std::array<grpc_op, 1> ops;
+      op_send_metadata(ops[0]);
 
-    auto call_status =
-        grpc_call_start_batch(call_, ops.data(), ops.size(), completion_tag().data, nullptr);
-
-    if (call_status != GRPC_CALL_OK) {
-      assert(false);  // TODO: HANDLE THIS
+      auto call_status =
+          grpc_call_start_batch(call_, ops.data(), ops.size(), completion_tag(8).data, nullptr);
+      
+      if (call_status != GRPC_CALL_OK) {
+        std::cerr << grpc_call_error_to_string(call_status) << "\n";
+        assert(false);  // TODO: HANDLE THIS
+      }
     }
   }
 
-  void send_end() {
+  void send_server_end() {
     std::array<grpc_op, 2> ops;
 
     op_recv_close(ops[0]);
     op_send_status(ops[1]);
 
     auto status =
-      grpc_call_start_batch(call_, ops.data(), ops.size(), completion_tag().data, nullptr);
+      grpc_call_start_batch(call_, ops.data(), ops.size(), completion_tag(4).data, nullptr);
 
     if(status != GRPC_CALL_OK) {
       std::cerr << grpc_call_error_to_string(status) << "\n";
@@ -104,8 +106,8 @@ public:
 
     finished_ = true;
 
-    if(!batch_in_flight_) {
-      send_end();
+    if(ready_to_send_) {
+      send_server_end();
     }
   }
 
@@ -128,11 +130,11 @@ public:
   }
 
    void flush_() {
-    if(batch_in_flight_) {
+    if(!ready_to_send_) {
       return ;
     }
 
-    batch_in_flight_ = true;
+    ready_to_send_ = false;
 
     auto op = pending_ops_.front();
     pending_ops_.pop();
@@ -140,7 +142,7 @@ public:
     assert(op.op == GRPC_OP_SEND_MESSAGE);
     
     auto status =
-      grpc_call_start_batch(call_, &op, 1, completion_tag(true).data, nullptr);
+      grpc_call_start_batch(call_, &op, 1, completion_tag(2).data, nullptr);
 
     if(status != GRPC_CALL_OK) {
       std::cerr << grpc_call_error_to_string(status) << "\n";
@@ -150,28 +152,53 @@ public:
     grpc_byte_buffer_destroy(op.data.send_message.send_message);
   }
 
-  bool exec(bool, bool write_op) noexcept override {
+  bool exec(bool, std::bitset<4> flags) noexcept override {
     std::unique_lock l(mtx_);
-    bool all_done = false;
 
-    if(!all_done) {
-      if(write_op) {
-        batch_in_flight_ = false;
-        if(!pending_ops_.empty()) {
-          flush_();
-        }
+    bool recv_op = flags.test(0);
+    bool send_op = flags.test(1);
+    bool closing = flags.test(2);
+    bool handshake = flags.test(3);
+
+    if(handshake) {
+      // start sending
+      ready_to_send_ = true;
+      if(!pending_ops_.empty()) {
+        flush_();
       }
-      else {
-        if(payload_) {
-          auto raw_data = payload_;
+
+      // start receiving
+      std::array<grpc_op, 1> ops;
+        op_recv_message(ops[0], &payload_);
+        
+        auto call_status =
+            grpc_call_start_batch(call_, ops.data(), ops.size(), completion_tag(1).data, nullptr);
+        if (call_status != GRPC_CALL_OK) {
+          assert(false);
+        }
+    }
+
+    
+    if(send_op) {
+      ready_to_send_ = true;
+      if(!pending_ops_.empty()) {
+        flush_();
+      }
+      else if(finished_) {
+        send_server_end();
+      }
+    }
+
+    if(recv_op) {
+      if(payload_) {
+        auto raw_data = payload_;
           payload_ = nullptr;
 
           std::array<grpc_op, 1> ops;
           op_recv_message(ops[0], &payload_);
           
           auto call_status =
-              grpc_call_start_batch(call_, ops.data(), ops.size(), completion_tag().data, nullptr);
-
+              grpc_call_start_batch(call_, ops.data(), ops.size(), completion_tag(1).data, nullptr);
           if (call_status != GRPC_CALL_OK) {
             assert(false);
           }
@@ -179,14 +206,14 @@ public:
           l.unlock();
           reader_prom_.push(deserialize<ReqT>(raw_data));
           grpc_byte_buffer_destroy(raw_data);        
-        }
-        else {
-          reader_prom_.complete();
-        }
+      }
+      else {
+        l.unlock();
+        reader_prom_.complete();
       }
     }
 
-    return all_done;
+    return closing;
   }
 };
 

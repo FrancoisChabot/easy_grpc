@@ -64,7 +64,7 @@ class Unary_call_completion final : public Completion_callback {
     }
   }
 
-  bool exec(bool, bool) noexcept override {
+  bool exec(bool, std::bitset<4>) noexcept override {
     if (status_ == GRPC_STATUS_OK) {
       rep_.set_value(deserialize<RepT>(recv_buffer_));
     } else {
@@ -178,7 +178,7 @@ class Streaming_call_session final : public Completion_callback {
     grpc_call_unref(call_);
   }
 
-  bool exec(bool, bool) noexcept override {
+  bool exec(bool, std::bitset<4>) noexcept override {
     bool all_done = finishing_;
 
     if(!all_done) {
@@ -427,7 +427,7 @@ public:
 
   }
 
-  bool exec(bool, bool) noexcept override {
+  bool exec(bool, std::bitset<4>) noexcept override {
     std::lock_guard l(mtx_);
     batch_in_flight_ = false;
 
@@ -501,8 +501,8 @@ template<typename RepT, typename ReqT>
 class Bidir_streaming_call_session final 
   : public Completion_callback {
 public:
-  Bidir_streaming_call_session(grpc_call* call, Stream_future<ReqT> req) 
-    : req_(std::move(req)), call_(call) {
+  Bidir_streaming_call_session(grpc_call* call, Stream_future<ReqT> req_stream) 
+    : call_(call) {
     grpc_metadata_array_init(&trailing_metadata_);
     grpc_metadata_array_init(&server_metadata_);
 
@@ -520,8 +520,33 @@ public:
     pending_ops[1].reserved = 0;
     pending_ops[1].data.recv_initial_metadata.recv_initial_metadata = &server_metadata_;
 
-    grpc_call_start_batch(call_, pending_ops.data(), pending_ops.size(), completion_tag().data, nullptr);
-    batch_in_flight_ = true;
+    can_send_ = false;
+    grpc_call_start_batch(call_, pending_ops.data(), pending_ops.size(), completion_tag(2).data, nullptr);
+
+    // Get ready to send requests
+    req_stream.for_each([this](ReqT req){
+      std::lock_guard l(mtx_);
+
+      auto buffer = serialize(req);
+      
+      grpc_op op;
+      op.op = GRPC_OP_SEND_MESSAGE;
+      op.flags = 0;
+      op.reserved = nullptr;
+      op.data.send_message.send_message = buffer;
+
+      pending_ops_.push(op);
+
+      // Send whatever we have.
+      flush_();
+    }).finally([this](expected<void>) {
+      std::lock_guard l(mtx_);
+      finished_sending_ = true;
+      
+      if(can_send_) {
+        send_client_end();
+      }
+    });
   }
 
   ~Bidir_streaming_call_session() {
@@ -538,11 +563,11 @@ public:
   }
 
   void flush_() {
-    if(batch_in_flight_) {
+    if(!can_send_) {
       return ;
     }
 
-    batch_in_flight_ = true;
+    can_send_ = false;
 
     auto op = pending_ops_.front();
     pending_ops_.pop();
@@ -550,36 +575,26 @@ public:
     assert(op.op == GRPC_OP_SEND_MESSAGE);
     
     auto status =
-      grpc_call_start_batch(call_, &op, 1, completion_tag(true).data, nullptr);
+      grpc_call_start_batch(call_, &op, 1, completion_tag(1).data, nullptr);
 
     if(status != GRPC_CALL_OK) {
       std::cerr << grpc_call_error_to_string(status) << "\n";
+      assert(false);
     }
-    assert(status == GRPC_CALL_OK);
     
     grpc_byte_buffer_destroy(op.data.send_message.send_message);
   }
 
 
-  void send_end() {
-    std::array<grpc_op, 2> ops;
+  void send_client_end() {
+    std::array<grpc_op, 1> ops;
 
     ops[0].op = GRPC_OP_SEND_CLOSE_FROM_CLIENT;
     ops[0].flags = 0;
     ops[0].reserved = 0;
 
-    ops[1].op = GRPC_OP_RECV_STATUS_ON_CLIENT;
-    ops[1].flags = 0;
-    ops[1].reserved = 0;
-    ops[1].data.recv_status_on_client.trailing_metadata =
-        &trailing_metadata_;
-    ops[1].data.recv_status_on_client.status = &status_;
-    ops[1].data.recv_status_on_client.status_details =
-        &status_details_;
-    ops[1].data.recv_status_on_client.error_string = &error_string_;
-
     auto status =
-      grpc_call_start_batch(call_, ops.data(), ops.size(), completion_tag().data, nullptr);
+      grpc_call_start_batch(call_, ops.data(), ops.size(), completion_tag(4).data, nullptr);
 
     if(status != GRPC_CALL_OK) {
       std::cerr << grpc_call_error_to_string(status) << "\n";
@@ -589,14 +604,52 @@ public:
     end_sent_ = true;
   }
 
-  bool exec(bool, bool write_op) noexcept override {
-    std::unique_lock l(mtx_);
-    batch_in_flight_ = false;
-    if(handshaking) {
-      handshaking = false;
+  void finish() {
+    std::array<grpc_op, 1> ops;
 
-      std::array<grpc_op, 1> ops;
+    ops[0].op = GRPC_OP_RECV_STATUS_ON_CLIENT;
+    ops[0].flags = 0;
+    ops[0].reserved = 0;
+    ops[0].data.recv_status_on_client.trailing_metadata =
+        &trailing_metadata_;
+    ops[0].data.recv_status_on_client.status = &status_;
+    ops[0].data.recv_status_on_client.status_details =
+        &status_details_;
+    ops[0].data.recv_status_on_client.error_string = &error_string_;
+
+
+    auto status =
+      grpc_call_start_batch(call_, ops.data(), ops.size(), completion_tag(8).data, nullptr);
+
+    if(status != GRPC_CALL_OK) {
+      std::cerr << grpc_call_error_to_string(status) << "\n";
+    }
+    assert(status == GRPC_CALL_OK);
+
+    end_sent_ = true;
+  }
+
+  bool exec(bool, std::bitset<4> flags) noexcept override {
+    bool write_op = flags.test(0);
+    bool handshake = flags.test(1);
+    bool ending = flags.test(2);
+    bool closing = flags.test(3);
+
+    if(closing) {
+      return true;
+    }
+    
+    std::unique_lock l(mtx_);
+
+    if(handshake) {
+      // Allow the sending of messages
+      can_send_ = true;
+      if(!pending_ops_.empty()) {
+        flush_();
+      }
+
       // Start receiving messages from the server
+      std::array<grpc_op, 1> ops;
       ops[0].op = GRPC_OP_RECV_MESSAGE;
       ops[0].flags = 0;
       ops[0].reserved = 0;
@@ -609,39 +662,22 @@ public:
         assert(false);
       }
 
-      l.unlock();
-
-      // Get ready to send requests
-      req_.for_each([this](ReqT req){
-        std::lock_guard l(mtx_);
-
-        auto buffer = serialize(req);
-        
-        grpc_op op;
-        op.op = GRPC_OP_SEND_MESSAGE;
-        op.flags = 0;
-        op.reserved = nullptr;
-        op.data.send_message.send_message = buffer;
-
-        pending_ops_.push(op);
-
-        // Send whatever we have.
-        flush_();
-      }).finally([this](expected<void>) {
-        std::lock_guard l(mtx_);
-        finished_ = true;
-        
-        if(!batch_in_flight_) {
-          send_end();
-        }
-      });
+      l.unlock();      
+    }
+    else if(ending) {
+      if(finished_receiving_) {
+        finish();
+      }
     }
     else if(write_op) {
       // That was the end of a write op
-      batch_in_flight_ = false;
+      can_send_ = true;
 
       if(!pending_ops_.empty()) {
         flush_();
+      }
+      else if(finished_sending_) {
+        send_client_end();
       }
     }
     else {
@@ -668,20 +704,27 @@ public:
         grpc_byte_buffer_destroy(data);
       }
       else {
+        finished_receiving_ = true;
+
+        //TODO: This is not quite right, I think. We should wait for the status to be received from the server.
         rep_.complete();
+
+        if(finished_sending_ && end_sent_) {
+          finish();
+        }
       }
     }
     return false;
   }
 
-  Stream_future<ReqT> req_;
   Stream_promise<RepT> rep_;
 
   // I really wish we could do this without a mutex, somehow...
   std::mutex mtx_;
-  bool handshaking = true;
-  bool batch_in_flight_ = false;
-  bool finished_ = false;
+  bool can_send_ = false;
+  bool finished_sending_ = false;
+  bool finished_receiving_ = false;
+
   bool end_sent_ = false;
 
   grpc_call* call_;

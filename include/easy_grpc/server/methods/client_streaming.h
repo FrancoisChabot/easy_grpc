@@ -68,7 +68,9 @@ public:
     }
   }
 
-  bool exec(bool, bool all_done) noexcept override {
+  bool exec(bool, std::bitset<4> flags) noexcept override {
+    bool all_done = flags.test(0);
+
     if(!all_done) {
       if(payload_) {
         auto raw_data = payload_;
