@@ -46,11 +46,14 @@ int main() {
 
   Blarg_service service;
 
+  rpc::server::Config cfg;
 
-  rpc::server::Server server = rpc::server::Config()
-    .with_default_listening_queues({server_cqs.begin(), server_cqs.end()})
-    .with_service(service.make_config())
-    .with_listening_port("0.0.0.0:12345");
+  cfg.add_default_listening_queues({server_cqs.begin(), server_cqs.end()})
+    .add_service(service.make_config())
+    .add_listening_port("0.0.0.0:12345");
+
+  rpc::server::Server server(std::move(cfg));
+;
 
 
   // Please replace this with proper signal handling (gpr might have what we need here...)

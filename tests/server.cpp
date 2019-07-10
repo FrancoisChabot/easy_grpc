@@ -60,10 +60,10 @@ TEST(server, bind_failure) {
 
   auto cfg = rpc::server::Config();
 
-  cfg.with_default_listening_queues(
+  cfg.add_default_listening_queues(
          {server_queues.begin(), server_queues.end()})
-      .with_service(sync_srv)
-      .with_listening_port("[", {});
+      .add_service(sync_srv)
+      .add_listening_port("[", {});
 
   EXPECT_THROW(rpc::server::Server(std::move(cfg)), std::runtime_error);
 }
@@ -79,12 +79,12 @@ TEST(server, failing_call) {
   auto cfg = rpc::server::Config();
 
   int server_port = 0;
-  cfg.with_default_listening_queues(
+  cfg.add_default_listening_queues(
          {server_queues.begin(), server_queues.end()})
-      .with_service(failing_srv)
-      .with_listening_port("127.0.0.1:0", {}, &server_port);
+      .add_service(failing_srv)
+      .add_listening_port("127.0.0.1:0", {}, &server_port);
 
-  rpc::server::Server srv(cfg);
+  rpc::server::Server srv(std::move(cfg));
 
   rpc::client::Unsecure_channel channel(
       std::string("127.0.0.1:") + std::to_string(server_port), &client_queue);
@@ -107,12 +107,12 @@ TEST(server, failing_with_junk) {
   auto cfg = rpc::server::Config();
 
   int server_port = 0;
-  cfg.with_default_listening_queues(
+  cfg.add_default_listening_queues(
          {server_queues.begin(), server_queues.end()})
-      .with_service(failing_srv)
-      .with_listening_port("127.0.0.1:0", {}, &server_port);
+      .add_service(failing_srv)
+      .add_listening_port("127.0.0.1:0", {}, &server_port);
 
-  rpc::server::Server srv(cfg);
+  rpc::server::Server srv(std::move(cfg));
 
   rpc::client::Unsecure_channel channel(
       std::string("127.0.0.1:") + std::to_string(server_port), &client_queue);
@@ -135,12 +135,12 @@ TEST(server, failing_async_call) {
   auto cfg = rpc::server::Config();
 
   int server_port = 0;
-  cfg.with_default_listening_queues(
+  cfg.add_default_listening_queues(
          {server_queues.begin(), server_queues.end()})
-      .with_service(failing_srv)
-      .with_listening_port("127.0.0.1:0", {}, &server_port);
+      .add_service(failing_srv)
+      .add_listening_port("127.0.0.1:0", {}, &server_port);
 
-  rpc::server::Server srv(cfg);
+  rpc::server::Server srv(std::move(cfg));
 
   rpc::client::Unsecure_channel channel(
       std::string("127.0.0.1:") + std::to_string(server_port), &client_queue);
@@ -162,10 +162,10 @@ TEST(server, move_server) {
   auto cfg = rpc::server::Config();
 
   int server_port = 0;
-  cfg.with_default_listening_queues(
+  cfg.add_default_listening_queues(
          {server_queues.begin(), server_queues.end()})
-      .with_service(sync_srv)
-      .with_listening_port("127.0.0.1:0", {}, &server_port);
+      .add_service(sync_srv)
+      .add_listening_port("127.0.0.1:0", {}, &server_port);
 
   ::tests::TestRequest req;
   req.set_name("dude");
@@ -177,7 +177,7 @@ TEST(server, move_server) {
   {
     rpc::server::Server dummy;
     {
-      rpc::server::Server srv(cfg);
+      rpc::server::Server srv(std::move(cfg));
 
       channel = rpc::client::Unsecure_channel(
           std::string("127.0.0.1:") + std::to_string(server_port),

@@ -27,7 +27,7 @@ namespace server {
 
 class Service_config {
  public:
-  Service_config(const char* name) : name_(name) {}
+  Service_config(std::string name) : name_(std::move(name)) {}
 
   template <typename CbT>
   void add_method(const char* name, CbT cb, Completion_queue_set={}) {
@@ -56,8 +56,9 @@ class Service_config {
     return methods_;
   }
 
+  const std::string& name() const { return name_; }
  private:
-  const char* name_;
+  std::string name_;
   std::vector<std::unique_ptr<detail::Method>> methods_;
 };
 }  // namespace server

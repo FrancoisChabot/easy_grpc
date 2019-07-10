@@ -26,12 +26,13 @@ TEST(channel, simple_connection) {
 
   Test_sync_impl sync_srv;
   int server_port = 0;
-  rpc::server::Server srv(
+  rpc::server::Server srv(std::move(
       rpc::server::Config()
-          .with_default_listening_queues(
+          .add_default_listening_queues(
               {sync_srv.queues.begin(), sync_srv.queues.end()})
-          .with_service(::tests::TestService::get_config(sync_srv))
-          .with_listening_port("127.0.0.1:0", {}, &server_port));
+          .add_service(::tests::TestService::get_config(sync_srv))
+          .add_listening_port("127.0.0.1:0", {}, &server_port)));
+
   
   rpc::Completion_queue client_queue;
   rpc::client::Unsecure_channel channel(
@@ -49,12 +50,12 @@ TEST(channel, delete_from_base_class) {
 
   Test_sync_impl sync_srv;
   int server_port = 0;
-  rpc::server::Server srv(
+  rpc::server::Server srv( std::move(
       rpc::server::Config()
-          .with_default_listening_queues(
+          .add_default_listening_queues(
               {sync_srv.queues.begin(), sync_srv.queues.end()})
-          .with_service(::tests::TestService::get_config(sync_srv))
-          .with_listening_port("127.0.0.1:0", {}, &server_port));
+          .add_service(::tests::TestService::get_config(sync_srv))
+          .add_listening_port("127.0.0.1:0", {}, &server_port)));
 
   rpc::Completion_queue client_queue;
   std::unique_ptr<rpc::client::Channel> channel =
@@ -76,12 +77,12 @@ TEST(channel, move_channel) {
 
   Test_sync_impl sync_srv;
   int server_port = 0;
-  rpc::server::Server srv(
+  rpc::server::Server srv( std::move(
       rpc::server::Config()
-          .with_default_listening_queues(
+          .add_default_listening_queues(
               {sync_srv.queues.begin(), sync_srv.queues.end()})
-          .with_service(::tests::TestService::get_config(sync_srv))
-          .with_listening_port("127.0.0.1:0", {}, &server_port));
+          .add_service(::tests::TestService::get_config(sync_srv))
+          .add_listening_port("127.0.0.1:0", {}, &server_port)));
 
   rpc::Completion_queue client_queue;
   rpc::client::Unsecure_channel blank_channel;

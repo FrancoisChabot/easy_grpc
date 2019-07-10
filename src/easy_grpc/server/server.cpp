@@ -23,9 +23,18 @@ namespace easy_grpc {
 
 namespace server {
 
-Server::Server(const Config& cfg) : default_queues_(cfg.default_queues_) {
+Server::Server(Config cfg) 
+  : default_queues_(cfg.default_queues_)
+  , features_(std::move(cfg.features_)) {
   // We need to pre-allocate the shutdown queue. Because it must be registered
   // in the server prior to starting it.
+
+  for(auto& f : features_) {
+    f->add_to_config(cfg);
+  }
+
+  assert(cfg.features_.empty());
+
   grpc_completion_queue_attributes sd_queue_attribs;
   sd_queue_attribs.version = GRPC_CQ_CURRENT_VERSION;
   sd_queue_attribs.cq_completion_type = GRPC_CQ_NEXT;

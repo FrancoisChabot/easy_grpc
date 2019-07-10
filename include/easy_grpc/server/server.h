@@ -31,27 +31,64 @@ class Completion_queue;
 namespace server {
 
 class Service;
+class Config;
+
+class Feature {
+  public:
+    virtual ~Feature() {}
+
+    virtual void add_to_config(Config&) = 0;
+};
 
 class Config {
  public:
   Config() = default;
+  Config(const Config&) = delete;
   Config(Config&&) = default;
   Config& operator=(Config&&) = default;
+  Config& operator=(const Config&) = delete;
 
-  Config& with_default_listening_queues(Completion_queue_set);
+  Config& add_default_listening_queues(Completion_queue_set) &;
+  Config&& add_default_listening_queues(Completion_queue_set set) &&;
 
   template <typename ServiceT>
-  Config& with_service(ServiceT& service) {
+  Config& add_service(ServiceT& service)& {
     using service_type = typename ServiceT::service_type;
 
-    return with_service(service_type::get_config(service));
+    return add_service(service_type::get_config(service));
   }
 
-  Config& with_service(Service_config);
+  template <typename ServiceT>
+  Config&& add_service(ServiceT& service)&& {
+    using service_type = typename ServiceT::service_type;
 
-  Config& with_listening_port(std::string addr,
+    return std::move(add_service(service_type::get_config(service)));
+  }
+
+  template<typename FeatureType>
+  Config& add_feature(FeatureType f) & {
+    features_.push_back(std::make_unique<FeatureType>(std::move(f)));
+    return *this;
+  }
+
+  template<typename FeatureType>
+  Config&& add_feature(FeatureType f) && {
+    features_.push_back(std::make_unique<FeatureType>(std::move(f)));
+    return std::move(*this);
+  }
+
+  Config& add_service(Service_config)&;
+  Config&& add_service(Service_config)&&;
+
+  Config& add_listening_port(std::string addr,
                               std::shared_ptr<Credentials> creds = {},
-                              int* bound_port = nullptr);
+                              int* bound_port = nullptr) &;
+
+  Config&& add_listening_port(std::string addr,
+                            std::shared_ptr<Credentials> creds = {},
+                            int* bound_port = nullptr) &&;
+
+  const std::vector<Service_config>& get_services() const;
 
  private:
   struct Port {
@@ -63,14 +100,14 @@ class Config {
   Completion_queue_set default_queues_;
   std::vector<Service_config> service_cfgs_;
   std::vector<Port> ports_;
-
+  std::vector<std::unique_ptr<Feature>> features_;
   friend class Server;
 };
 
 class Server {
  public:
   Server() = default;
-  Server(const Config& cfg);
+  Server(Config cfg);
   Server(Server&& rhs);
   Server& operator=(Server&& rhs);
   ~Server();
@@ -89,6 +126,8 @@ class Server {
   Completion_queue_set default_queues_;
 
   grpc_completion_queue* shutdown_queue_ = nullptr;
+
+  std::vector<std::unique_ptr<Feature>> features_;
 };
 }  // namespace server
 
