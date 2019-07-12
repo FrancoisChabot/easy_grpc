@@ -52,7 +52,7 @@ public:
       catch(...) {
         prom->set_exception(std::current_exception());
       }
-    }).finally([prom](expected<void> e){
+    }).finally([prom](expected<void>){
       if(*prom) {
         prom->complete();
       }
