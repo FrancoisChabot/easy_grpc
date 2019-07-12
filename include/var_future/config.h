@@ -20,7 +20,7 @@
 
 #define AOM_VARFUT_VERSION_MAJOR 0
 #define AOM_VARFUT_VERSION_MINOR 3
-#define AOM_VARFUT_VERSION_PATCH 1
+#define AOM_VARFUT_VERSION_PATCH 2
 
 // **************************** std::expected ***************************//
 
@@ -32,18 +32,5 @@ template <typename T>
 using expected = nonstd::expected<T, std::exception_ptr>;
 using unexpected = nonstd::unexpected_type<std::exception_ptr>;
 }  // namespace aom
-
-// ********************** No Undefined Behavior  *************************//
-
-// There is currently (1) known technical UB in the implementation of the
-// library. It is tolerated because it's more of a blind spot in the StdLib
-// specification than an actual problem, and is consistent accross all
-// compilers.
-//
-// Nevertheless, if you want absolute strict standard adherance,
-
-//#define VAR_FUTURE_NO_UB
-
-namespace aom {}  // namespace aom
 
 #endif

@@ -539,8 +539,13 @@ public:
 
       // Send whatever we have.
       flush_();
-    }).finally([this](expected<void>) {
+    }).finally([this](expected<void> s) {
+
       std::lock_guard l(mtx_);
+      if(!s.has_value()) {
+        grpc_call_cancel(call_, nullptr);
+      }
+
       finished_sending_ = true;
       
       if(can_send_) {
@@ -617,7 +622,6 @@ public:
         &status_details_;
     ops[0].data.recv_status_on_client.error_string = &error_string_;
 
-
     auto status =
       grpc_call_start_batch(call_, ops.data(), ops.size(), completion_tag(8).data, nullptr);
 
@@ -635,7 +639,15 @@ public:
     bool ending = flags.test(2);
     bool closing = flags.test(3);
 
+    std::cout << "serv_exec: " << flags.to_string() << "\n";
+
     if(closing) {
+      if(status_ == GRPC_STATUS_OK) {
+        rep_.complete();
+      }
+      else {
+        rep_.set_exception(std::make_exception_ptr(Rpc_error(status_, error_string_)));
+      }
       return true;
     }
     
@@ -707,8 +719,6 @@ public:
         finished_receiving_ = true;
 
         //TODO: This is not quite right, I think. We should wait for the status to be received from the server.
-        rep_.complete();
-
         if(finished_sending_ && end_sent_) {
           finish();
         }
