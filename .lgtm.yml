@@ -1,0 +1,6 @@
+path_classifiers:
+  test:
+    - tests
+  library:
+    - gtest
+    - include/nonstd
