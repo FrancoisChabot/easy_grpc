@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.10)
 project(easy_grpc VERSION 0.0.1)
 
+add_subdirectory(variadic_future)
+
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 
 set(THREADS_PREFER_PTHREAD_FLAG ON)
@@ -9,16 +11,6 @@ find_package(Threads REQUIRED)
 SET(EASY_GRPC_BUILD_EXAMPLES ON CACHE BOOL "easy_grpc examples")
 SET(EASY_GRPC_TEST_COVERAGE OFF CACHE BOOL "easy_grpc Coverage")
 SET(EASY_GRPC_BUILD_TESTS ON CACHE BOOL "easy_grpc tests")
-
-
-if(EASY_GRPC_TEST_COVERAGE)
-  if(CMAKE_COMPILER_IS_GNUCXX)
-    include(CodeCoverage)
-    APPEND_COVERAGE_COMPILER_FLAGS()
-  else()
-    message( FATAL_ERROR "Code coverage only works on gcc" )
-  endif()
-endif()
 
 add_subdirectory(protoc_plugin)
 
@@ -40,11 +32,6 @@ else()
   target_compile_options(easy_grpc PUBLIC -Wall -Wextra -pedantic -Werror)
 endif()
 
-if (COVERAGE)
-  target_compile_options(easy_grpc PUBLIC --coverage)
-  target_link_libraries(easy_grpc gcov)
-endif()
-
 target_compile_features(easy_grpc PUBLIC cxx_std_17)
 
 target_include_directories(easy_grpc
@@ -53,7 +40,8 @@ target_include_directories(easy_grpc
 )
 
 target_link_libraries(easy_grpc
-    Threads::Threads
+  var_futures
+  Threads::Threads
 )
 
 install(TARGETS easy_grpc
