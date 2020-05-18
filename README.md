@@ -1,3 +1,5 @@
+**N.B.** Main development of this is currently happening at https://gitlab.com/cogment/easy_grpc, this version might be a bit out of date.
+
 [![CircleCI](https://circleci.com/gh/FrancoisChabot/easy_grpc.svg?style=svg)](https://circleci.com/gh/FrancoisChabot/easy_grpc)
 [![Join the chat at https://gitter.im/easy_grpc/community](https://badges.gitter.im/easy_grpc/community.svg)](https://gitter.im/easy_grpc/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
